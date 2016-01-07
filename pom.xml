@@ -32,7 +32,41 @@
          <artifactId>1</artifactId>
          <version>1</version>
       </dependency>
+      <dependency>
+	<groupId>mysql</groupId>
+	<artifactId>mysql-connector-java</artifactId>
+	<version>5.1.38</version>
+</dependency>
+
    </dependencies>
+       <build>
+    <plugins>
+      <!-- any other plugins -->
+      <plugin>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+        <archive>
+         <manifest>
+           <addClasspath>true</addClasspath>
+                     <mainClass>com.discord.bot.Bot</mainClass>
+         </manifest>
+                    </archive>
+          <descriptorRefs>
+            <descriptorRef>jar-with-dependencies</descriptorRef>
+          </descriptorRefs>
+        </configuration>
+      </plugin>
+    </plugins>
+  	</build>
+   
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>1.8</maven.compiler.source>

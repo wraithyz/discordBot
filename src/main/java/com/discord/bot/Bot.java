@@ -14,12 +14,6 @@ import java.net.HttpURLConnection;
 import sx.blah.discord.api.ClientBuilder;
 import sx.blah.discord.api.IDiscordClient;
 
-class Streams
-{
-    String channel;
-    String game;
-}
-
 public class Bot
 {
     IDiscordClient client;
@@ -60,7 +54,7 @@ public class Bot
     {
         twitchHandler = new TwitchHandler();
         imgurHandler = new ImgurHandler();
-        //databaseHandler = new DatabaseHandler();
+        databaseHandler = new DatabaseHandler();
         bingHandler = new BingHandler();
         chatterBotHandler = new ChatterBotHandler();
          
@@ -70,7 +64,7 @@ public class Bot
     {
         if (!message.isEmpty() && channel != null)
         {
-            new MessageBuilder(client).withContent(cleanQuotationmarks(message)).withChannel(channel).build();
+            new MessageBuilder(client).withContent(message).withChannel(channel).build();
         }
     }
 
@@ -220,8 +214,7 @@ public class Bot
                     sx.blah.discord.handle.obj.Channel channel = messageReceivedEvent.getMessage().getChannel();
                     if (!loggedIn)
                     {
-                        //sx.blah.discord.handle.obj.Channel announceChannel = client.getChannelByID("95592065215246336");
-                        sx.blah.discord.handle.obj.Channel announceChannel = client.getChannelByID("107936658980093952");
+                        sx.blah.discord.handle.obj.Channel announceChannel = client.getChannelByID("95592065215246336");
                         twitchHandler.checkOnlineStatus(announceChannel, bot);
                         loggedIn = true;
                     }
@@ -231,7 +224,7 @@ public class Bot
                     
 					if (!m.getContent().startsWith("!"))
 					{
-	                    //databaseHandler.updateDatabase(m);
+	                    databaseHandler.updateDatabase(m);
 					}
                     
                     if (m.getContent().startsWith(REPEAT))
@@ -280,26 +273,26 @@ public class Bot
                     // Channel stats.
                     if (m.getContent().equals(STATS))
                     {
-                        String id = messageReceivedEvent.getMessage().getID();
+                        String id = messageReceivedEvent.getMessage().getChannel().getID();
                         sendMessage(databaseHandler.channelStats(id), channel);
                     }
                     // User stats.
                     else if (m.getContent().startsWith(STATS))
                     {
                         String username = m.getContent().substring(STATS.length() + 1);
-                        String id = messageReceivedEvent.getMessage().getID();
+                        String id = messageReceivedEvent.getMessage().getChannel().getID();
                         sendMessage(databaseHandler.userStats(username, id), channel);
                     }
                     
                     if (m.getContent().equals(RANDOMQUOTE))
                     {
-                        String id = messageReceivedEvent.getMessage().getID();
+                        String id = messageReceivedEvent.getMessage().getChannel().getID();
                         sendMessage(databaseHandler.randomChannelQuote(id), channel);
                     }
                     else if (m.getContent().startsWith(RANDOMQUOTE))
                     {
                         String username = m.getContent().substring(RANDOMQUOTE.length() + 1);
-                        String id = messageReceivedEvent.getMessage().getID();
+                        String id = messageReceivedEvent.getMessage().getChannel().getID();
                         sendMessage(databaseHandler.randomUserQuote(username, id), channel);
                     }
                     

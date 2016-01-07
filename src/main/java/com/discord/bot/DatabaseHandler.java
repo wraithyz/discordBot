@@ -80,7 +80,6 @@ public class DatabaseHandler
                          "FROM Users " +
                          "WHERE id = '" + m.getAuthor().getID() + "'" + 
                          ";";
-            //System.out.println(query);
 
             ResultSet rs = stmt.executeQuery(query);
             // No such user in database.
@@ -89,7 +88,6 @@ public class DatabaseHandler
                 query = "INSERT INTO Users (id, name) " +
                                   "VALUES ('" + m.getAuthor().getID() + "', '" + m.getAuthor().getName() + "')" +
                                   ";";
-                //System.out.println(query);
                 stmt.executeUpdate(query);
             }
 
@@ -98,7 +96,6 @@ public class DatabaseHandler
                     "FROM Channels " +
                     "WHERE id = '" + m.getChannel().getID() + "'" + 
                     ";";
-            //System.out.println(query);
 
             rs = stmt.executeQuery(query);
             // No such channel in database.
@@ -107,7 +104,6 @@ public class DatabaseHandler
                 query = "INSERT INTO Channels (id, name) " +
                         "VALUES ('" + m.getChannel().getID() + "','" + m.getChannel().getName() + "')" +
                         ";";
-                System.out.println(query);
                 stmt.executeUpdate(query);
             }
 
@@ -120,10 +116,11 @@ public class DatabaseHandler
                 java.util.Date date = new Date();
                 Object param = new java.sql.Timestamp(date.getTime());
 
-                System.out.println("INSERT INTO Messages (message, userId, channelId, username ,time) " +
+                /*System.out.println("INSERT INTO Messages (message, userId, channelId, username ,time) " +
                                    "VALUES ('" + m.getContent() + "','" + m.getAuthor().getID() + "','"
                                    + m.getChannel().getID() + "'," + m.getChannel().getName() + "', " + param.toString() + ")" +
                                    ";");
+                */
                 preparedStmt = connection.prepareStatement(query);
                 preparedStmt.setString(1, m.getContent());
                 preparedStmt.setString(2, m.getAuthor().getID());      
@@ -151,12 +148,10 @@ public class DatabaseHandler
                     "FROM Messages " +
                     "WHERE channelId = '" + id + "'" +
                     "ORDER BY time DESC;";
-            System.out.println(query);
 
             ResultSet rs = stmt.executeQuery(query);
             rs.last();
             int size = rs.getRow();
-            System.out.println(size);
             Timestamp timestamp = rs.getTimestamp("time");
             if (size > 0)
             {
@@ -244,7 +239,6 @@ public class DatabaseHandler
                     Timestamp timestamp = rs.getTimestamp("time");
                     String username = rs.getString("username");
                     java.util.Date date = timestamp;
-                    System.out.println(username + ": \"" + message + " \"(" + date + ")");
                     channelMessage = username + ": \"" + message + "\" (" + date + ")";
                 }
             }
@@ -267,7 +261,6 @@ public class DatabaseHandler
                            "FROM Users " +
                            "WHERE name = '" + username + "' " +
                            "LIMIT 1;";
-            System.out.println(query);
 
             ResultSet rs = stmt.executeQuery(query);
             // No such user in database.
@@ -278,7 +271,6 @@ public class DatabaseHandler
                         "WHERE userId = '" + rs.getString(1) + "'" +
                         "AND channelId = '" + id + "'" +
                         ";";
-                System.out.println(query);
 
                 rs = stmt.executeQuery(query);
                 rs.last();
@@ -294,7 +286,6 @@ public class DatabaseHandler
                         String messageUsername = rs.getString("username");
                         Timestamp timestamp = rs.getTimestamp("time");
                         java.util.Date date = timestamp;
-                        System.out.println(messageUsername + ": \"" + message + " \"(" + date + ")");
                         channelMessage = messageUsername + ": \"" + message + "\" (" + date + ")";
                     }   
                 }
