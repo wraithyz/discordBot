@@ -1,6 +1,13 @@
 package com.discord.bot;
 
+import java.awt.Image;
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.Random;
@@ -11,8 +18,11 @@ import sx.blah.discord.handle.impl.events.MessageReceivedEvent;
 import sx.blah.discord.handle.obj.Message;
 import sx.blah.discord.util.MessageBuilder;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import javax.imageio.ImageIO;
 import sx.blah.discord.api.ClientBuilder;
 import sx.blah.discord.api.IDiscordClient;
+import sx.blah.discord.util.HTTP403Exception;
 
 public class Bot
 {
@@ -23,6 +33,7 @@ public class Bot
     private DatabaseHandler databaseHandler;
     private BingHandler bingHandler;
     private ChatterBotHandler chatterBotHandler;
+    private EmoteHandler emoteHandler;
     
     private boolean loop = false;
 
@@ -57,14 +68,30 @@ public class Bot
         databaseHandler = new DatabaseHandler();
         bingHandler = new BingHandler();
         chatterBotHandler = new ChatterBotHandler();
-         
-    }
+        emoteHandler = new EmoteHandler();
+        emoteHandler.readBttvEmotes(this);
+        emoteHandler.readCurrentEmotes();
+}
     
     public void sendMessage(String message, sx.blah.discord.handle.obj.Channel channel)
     {
         if (!message.isEmpty() && channel != null)
         {
             new MessageBuilder(client).withChannel(channel).withContent(message).build();
+
+        }
+    }
+    
+    public void sendFile(String path, sx.blah.discord.handle.obj.Channel channel)
+    {        
+        File file = new File(path);
+        try 
+        {
+            channel.sendFile(file);
+        } 
+        catch (HTTP403Exception | IOException ex) 
+        {
+            Logger.getLogger(Bot.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -106,6 +133,36 @@ public class Bot
         }
     }
         
+    public void readImage(String urlString, String pathTo)
+    {
+        try 
+        {
+            URL url = new URL(urlString);
+            InputStream in = new BufferedInputStream(url.openStream());
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            byte[] buf = new byte[1024];
+            int n = 0;
+            while (-1!=(n=in.read(buf)))
+            {
+                out.write(buf, 0, n);
+            }
+            out.close();
+            in.close();
+            byte[] response = out.toByteArray();
+            FileOutputStream fos = new FileOutputStream(pathTo);
+            fos.write(response);
+            fos.close();
+        }
+        catch (MalformedURLException ex) 
+        {
+            Logger.getLogger(Bot.class.getName()).log(Level.SEVERE, null, ex);
+        } 
+        catch (IOException ex) 
+        {
+            Logger.getLogger(Bot.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
     public String readUrl(String urlString) throws Exception
     {
         BufferedReader reader = null;
@@ -220,9 +277,22 @@ public class Bot
                     }
                     					
                     Message m = messageReceivedEvent.getMessage();
-
                     
-					if (!m.getContent().startsWith("!"))
+                    String[] sep = m.getContent().split(" ");
+                    for (String s : sep)
+                    {
+                        boolean found = false;
+                        if (s.endsWith("l"))
+                        {
+                            found = emoteHandler.findEmote(s.substring(0, s.length() - 1), true, bot, channel);
+                        }
+                        if (!found)
+                        {
+                            emoteHandler.findEmote(s, false, bot, channel);
+                        }
+                    }
+                    
+					if (!m.getContent().startsWith("!") && !m.getContent().isEmpty())
 					{
 	                    databaseHandler.updateDatabase(m);
 					}
