@@ -64,7 +64,7 @@ public class Bot
     {
         if (!message.isEmpty() && channel != null)
         {
-            new MessageBuilder(client).withContent(message).withChannel(channel).build();
+            new MessageBuilder(client).withChannel(channel).withContent(message).build();
         }
     }
 
