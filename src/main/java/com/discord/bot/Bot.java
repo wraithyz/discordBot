@@ -135,6 +135,7 @@ public class Bot
         
     public void readImage(String urlString, String pathTo)
     {
+        System.out.println("Downloading new emote: " + urlString);
         try 
         {
             URL url = new URL(urlString);
@@ -282,6 +283,11 @@ public class Bot
                     for (String s : sep)
                     {
                         boolean found = false;
+                        if (s.equals("SourPlsl"))
+                        {
+                            sendMessage("No fuck you leatherman", channel);
+                            continue;
+                        }
                         if (s.endsWith("l"))
                         {
                             found = emoteHandler.findEmote(s.substring(0, s.length() - 1), true, bot, channel);
