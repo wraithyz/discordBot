@@ -19,6 +19,7 @@ import sx.blah.discord.handle.obj.Message;
 import sx.blah.discord.util.MessageBuilder;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
+import java.nio.charset.StandardCharsets;
 import javax.imageio.ImageIO;
 import sx.blah.discord.api.ClientBuilder;
 import sx.blah.discord.api.IDiscordClient;
@@ -71,6 +72,8 @@ public class Bot
         emoteHandler = new EmoteHandler();
         emoteHandler.readBttvEmotes(this);
         emoteHandler.readCurrentEmotes();
+        String xD = emoteHandler.readJsonFile(System.getProperty("user.dir") + "/emotes/emotes.json", StandardCharsets.UTF_8);
+        emoteHandler.readJsonEmotes(xD);
 }
     
     public void sendMessage(String message, sx.blah.discord.handle.obj.Channel channel)
@@ -133,26 +136,34 @@ public class Bot
         }
     }
         
-    public void readImage(String urlString, String pathTo)
+    public boolean readImage(String urlString, String pathTo)
     {
         System.out.println("Downloading new emote: " + urlString);
+        boolean success = false;
         try 
         {
             URL url = new URL(urlString);
-            InputStream in = new BufferedInputStream(url.openStream());
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            byte[] buf = new byte[1024];
-            int n = 0;
-            while (-1!=(n=in.read(buf)))
+            ByteArrayOutputStream out;
+            try (InputStream in = new BufferedInputStream(url.openStream())) 
             {
-                out.write(buf, 0, n);
+                out = new ByteArrayOutputStream();
+                byte[] buf = new byte[1024];
+                int n = 0;
+                while (-1!=(n=in.read(buf)))
+                {
+                    out.write(buf, 0, n);
+                }   
+                out.close();
             }
-            out.close();
-            in.close();
-            byte[] response = out.toByteArray();
-            FileOutputStream fos = new FileOutputStream(pathTo);
-            fos.write(response);
-            fos.close();
+            if (out.size() > 0)
+            {
+                byte[] response = out.toByteArray();
+                try (FileOutputStream fos = new FileOutputStream(pathTo)) 
+                {
+                    fos.write(response);
+                }
+                success = true;
+            }
         }
         catch (MalformedURLException ex) 
         {
@@ -162,6 +173,7 @@ public class Bot
         {
             Logger.getLogger(Bot.class.getName()).log(Level.SEVERE, null, ex);
         }
+        return success;
     }
     
     public String readUrl(String urlString) throws Exception
@@ -283,6 +295,11 @@ public class Bot
                     for (String s : sep)
                     {
                         boolean found = false;
+                        
+                        if (s.length() < 2)
+                        {
+                            continue;
+                        }
                         if (s.equals("SourPlsl"))
                         {
                             sendMessage("No fuck you leatherman", channel);
