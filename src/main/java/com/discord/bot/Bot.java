@@ -55,12 +55,13 @@ public class Bot
     private final String BING = "!bing";
     private final String CHANNELINFO = "!channelinfo";
     private final String USERINFO = "!userinfo";
+    private final String RANDOMEMOTE = "!randomemote";
     
     private boolean loggedIn = false;
     
     private final String[] COMMANDS = { REPEAT, TEST, FOLLOWAGE, TWITCHINFO, COMMAND, RANDOM, BALL, CHAT, 
                                         LOOP, STALK, IMGUR, RANDOMQUOTE, STATS, BING, CHANNELINFO, 
-                                        USERINFO };
+                                        USERINFO, RANDOMEMOTE };
 
     public Bot()
     {
@@ -71,9 +72,10 @@ public class Bot
         chatterBotHandler = new ChatterBotHandler();
         emoteHandler = new EmoteHandler();
         emoteHandler.readBttvEmotes(this);
-        emoteHandler.readCurrentEmotes();
         String xD = emoteHandler.readJsonFile(System.getProperty("user.dir") + "/emotes/emotes.json", StandardCharsets.UTF_8);
         emoteHandler.readJsonEmotes(xD);
+        emoteHandler.readCurrentEmotes();
+
 }
     
     public void sendMessage(String message, sx.blah.discord.handle.obj.Channel channel)
@@ -296,7 +298,7 @@ public class Bot
                     {
                         boolean found = false;
                         
-                        if (s.length() < 2)
+                        if (s.length() < 2 || s.equals("..."))
                         {
                             continue;
                         }
@@ -319,6 +321,11 @@ public class Bot
 					{
 	                    databaseHandler.updateDatabase(m);
 					}
+                    
+                    if (m.getContent().equals(RANDOMEMOTE))
+                    {                        
+                        emoteHandler.findEmote(emoteHandler.randomEmote(), true, bot, channel);
+                    }
                     
                     if (m.getContent().startsWith(REPEAT))
                     {

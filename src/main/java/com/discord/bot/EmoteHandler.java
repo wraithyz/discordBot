@@ -1,5 +1,4 @@
 
-
 package com.discord.bot;
 
 import com.google.gson.JsonObject;
@@ -12,6 +11,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.json.simple.JSONObject;
@@ -60,6 +60,7 @@ public class EmoteHandler
     public void readCurrentEmotes()
     {
         int found = 0;
+        int jsonFound = 0;
         new File(System.getProperty("user.dir") + "/emotes").mkdirs();
         final File folder = new File(System.getProperty("user.dir") + "/emotes");
         for (final File fileEntry : folder.listFiles()) 
@@ -72,8 +73,17 @@ public class EmoteHandler
                     found++;
                 }
             }
+            for (Emote e : jsonEmotes)
+            {
+                if (fileEntry.getName().equals(e.getCode() + "." + e.getImagetype()))
+                {
+                    e.setDownloaded(true);
+                    jsonFound++;
+                }
+            }
         }
         System.out.println(found + " bttv emotes already downloaded.");
+        System.out.println(jsonFound + " json bttv emotes already downloaded.");
     }
     
     // Finds if string is bttv emote. 
@@ -184,5 +194,12 @@ public class EmoteHandler
         {
             Logger.getLogger(EmoteHandler.class.getName()).log(Level.SEVERE, null, ex);
         }
+    }
+    
+    public String randomEmote()
+    {
+        Random r = new Random();
+        int chosen = r.nextInt(jsonEmotes.size());
+        return jsonEmotes.get(chosen).getCode();
     }
 }
