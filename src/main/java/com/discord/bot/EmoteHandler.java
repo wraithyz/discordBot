@@ -60,7 +60,9 @@ public class EmoteHandler
     public void readCurrentEmotes()
     {
         int found = 0;
+        int largeFound = 0;
         int jsonFound = 0;
+        int jsonLargeFound = 0;
         new File(System.getProperty("user.dir") + "/emotes").mkdirs();
         final File folder = new File(System.getProperty("user.dir") + "/emotes");
         for (final File fileEntry : folder.listFiles()) 
@@ -72,6 +74,11 @@ public class EmoteHandler
                     e.setDownloaded(true);
                     found++;
                 }
+                if (fileEntry.getName().equals(e.getCode() + "l." + e.getImagetype()))
+                {
+                    e.setLargeDownloaded(true);
+                    largeFound++;
+                }
             }
             for (Emote e : jsonEmotes)
             {
@@ -80,10 +87,17 @@ public class EmoteHandler
                     e.setDownloaded(true);
                     jsonFound++;
                 }
+                if (fileEntry.getName().equals(e.getCode() + "l." + e.getImagetype()))
+                {
+                    e.setLargeDownloaded(true);
+                    jsonLargeFound++;
+                }
             }
         }
         System.out.println(found + " bttv emotes already downloaded.");
+        System.out.println(largeFound + " large bttv emotes already downloaded.");
         System.out.println(jsonFound + " json bttv emotes already downloaded.");
+        System.out.println(jsonLargeFound + " large json bttv emotes already downloaded.");
     }
     
     // Finds if string is bttv emote. 
@@ -91,7 +105,6 @@ public class EmoteHandler
     {
         Emote e = null;
         boolean found = false;
-        boolean customEmote = false;
         for (Emote em : emoteList)
         {
             if (em.getCode().equals(emote))
@@ -109,7 +122,6 @@ public class EmoteHandler
                 {
                     e = em;
                     found = true;
-                    customEmote = false;
                     break;
                 }
             } 
@@ -118,38 +130,44 @@ public class EmoteHandler
         if (e != null)
         {
             String emotepath = System.getProperty("user.dir") + "/emotes/";
-            // Emote already downloaded.
-            if (e.isDownloaded())
+            // Large emote already downloaded.
+            if (e.isLargeDownloaded() && large)
             {
-                if (large && !customEmote)
-                {
-                    bot.sendFile(emotepath + e.getCode() + "l." + e.getImagetype(), channel);
-                }
-                else
-                {
-                    bot.sendFile(emotepath + e.getCode() + "." + e.getImagetype(), channel);
-                }
+                bot.sendFile(emotepath + e.getCode() + "l." + e.getImagetype(), channel);
             }
-            // Downloads small and large version of emote.
+            // Small emote is already downloaded.
+            else if (e.isDownloaded() && !large)
+            {
+                bot.sendFile(emotepath + e.getCode() + "." + e.getImagetype(), channel);
+            }
+            // Downloads small or large version of emote.
             else
             {
                 boolean success = false;
-                success = bot.readImage("https://cdn.betterttv.net/emote/" + e.getId() + "/" + "1x", 
-                               emotepath + e.getCode() + "." + e.getImagetype());
-                if (!customEmote)
+
+                if (large)
                 {
                     success = bot.readImage("https://cdn.betterttv.net/emote/" + e.getId() + "/" + "3x", 
-                                emotepath + e.getCode() + "l." + e.getImagetype());  
-                }
-                if (success)
-                {
-                    e.setDownloaded(true);
+                                            emotepath + e.getCode() + "l." + e.getImagetype());
+                    if (success)
+                    {
+                        e.setLargeDownloaded(true);
+                    }
                 }
                 else
                 {
+                    success = bot.readImage("https://cdn.betterttv.net/emote/" + e.getId() + "/" + "1x", 
+                                            emotepath + e.getCode() + "." + e.getImagetype());
+                    if (success)
+                    {
+                        e.setDownloaded(true);
+                    }
+                }
+                if (!success)
+                {
                     System.out.println("Emote download failed, not posting.");
                 }
-                if (large && !customEmote && success)
+                if (large && success)
                 {
                     bot.sendFile(emotepath + e.getCode() + "l." + e.getImagetype(), channel);
                 }
@@ -184,7 +202,8 @@ public class EmoteHandler
             JSONParser parser = new JSONParser();            
             JSONObject jSONObject = (JSONObject) parser.parse(emotes);
             Map map = (Map)jSONObject;
-            for (Iterator it = map.entrySet().iterator(); it.hasNext();) {
+            for (Iterator it = map.entrySet().iterator(); it.hasNext();) 
+            {
                 Map.Entry<String, String> entry = (Map.Entry<String, String>) it.next();
                 jsonEmotes.add(new Emote(entry.getKey(), entry.getValue(), "png", false));
             }

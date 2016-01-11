@@ -8,6 +8,7 @@ public class Emote
     private String id;
     private String imagetype;
     private boolean downloaded;
+    private boolean largeDownloaded;
 
     public Emote(String code, String id, String imagetype, boolean downloaded)
     {
@@ -37,6 +38,11 @@ public class Emote
         this.downloaded = downloaded;
     }
 
+    public void setLargeDownloaded(boolean largeDownloaded)
+    {
+        this.largeDownloaded = largeDownloaded;
+    }
+
     public String getCode()
     {
         return code;
@@ -56,5 +62,11 @@ public class Emote
     {
         return downloaded;
     }
+
+    public boolean isLargeDownloaded()
+    {
+        return largeDownloaded;
+    }
+    
 
 }

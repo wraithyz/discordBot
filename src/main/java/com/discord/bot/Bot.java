@@ -67,13 +67,12 @@ public class Bot
     {
         twitchHandler = new TwitchHandler();
         imgurHandler = new ImgurHandler();
-        databaseHandler = new DatabaseHandler();
+        //databaseHandler = new DatabaseHandler();
         bingHandler = new BingHandler();
         chatterBotHandler = new ChatterBotHandler();
         emoteHandler = new EmoteHandler();
         emoteHandler.readBttvEmotes(this);
-        String xD = emoteHandler.readJsonFile(System.getProperty("user.dir") + "/emotes/emotes.json", StandardCharsets.UTF_8);
-        emoteHandler.readJsonEmotes(xD);
+        emoteHandler.readJsonEmotes(emoteHandler.readJsonFile(System.getProperty("user.dir") + "/emotes/emotes.json", StandardCharsets.UTF_8));
         emoteHandler.readCurrentEmotes();
 
 }
