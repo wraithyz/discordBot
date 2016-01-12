@@ -56,6 +56,7 @@ public class Bot
     private final String CHANNELINFO = "!channelinfo";
     private final String USERINFO = "!userinfo";
     private final String RANDOMEMOTE = "!randomemote";
+    private final String QUIT = "!quit";
     
     private boolean loggedIn = false;
     
@@ -67,7 +68,7 @@ public class Bot
     {
         twitchHandler = new TwitchHandler();
         imgurHandler = new ImgurHandler();
-        //databaseHandler = new DatabaseHandler();
+        databaseHandler = new DatabaseHandler();
         bingHandler = new BingHandler();
         chatterBotHandler = new ChatterBotHandler();
         emoteHandler = new EmoteHandler();
@@ -324,6 +325,12 @@ public class Bot
                     if (m.getContent().equals(RANDOMEMOTE))
                     {                        
                         emoteHandler.findEmote(emoteHandler.randomEmote(), true, bot, channel);
+                    }
+                    
+                    if (m.getContent().equals(QUIT) && m.getAuthor().getID().equals(AuthVariables.USERID))
+                    { 
+                        sendMessage("Bye guys... BibleThump", channel);
+                        System.exit(0);
                     }
                     
                     if (m.getContent().startsWith(REPEAT))

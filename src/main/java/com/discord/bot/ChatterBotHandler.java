@@ -15,17 +15,30 @@ import java.util.logging.Logger;
 
 public class ChatterBotHandler
 {
+    ChatterBotFactory factory;
+    ChatterBot bot;
+    ChatterBotSession botSession;
+    
+    public ChatterBotHandler()
+    {
+        try 
+        { 
+            factory = new ChatterBotFactory();
+            bot = factory.create(ChatterBotType.PANDORABOTS, AuthVariables.PANDORABOT);
+            botSession = bot.createSession();
+        } 
+        catch (Exception ex) 
+        {
+            Logger.getLogger(ChatterBotHandler.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
     public String findAnswer(String question)
     {
         String answer = "";
         try 
-        { 
-            ChatterBotFactory factory = new ChatterBotFactory();
-
-            ChatterBot bot1 = factory.create(ChatterBotType.PANDORABOTS, AuthVariables.PANDORABOT);
-            ChatterBotSession bot1session = bot1.createSession();
-
-            answer = bot1session.think(question);
+        {
+            answer = botSession.think(question);
         } 
         catch (Exception ex) 
         {
