@@ -76,7 +76,7 @@ public class Bot extends ListenerAdapter
     {
         twitchHandler = new TwitchHandler();
         imgurHandler = new ImgurHandler();
-        //databaseHandler = new DatabaseHandler();
+        databaseHandler = new DatabaseHandler();
         bingHandler = new BingHandler();
         chatterBotHandler = new ChatterBotHandler();
         catHandler = new CatHandler();
