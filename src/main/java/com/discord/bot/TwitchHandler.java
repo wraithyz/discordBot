@@ -25,6 +25,7 @@ import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import net.dv8tion.jda.entities.TextChannel;
 
 public class TwitchHandler
 {
@@ -32,6 +33,7 @@ public class TwitchHandler
     private String followage = "";
     private String userInfo = "";
     private String onlineStatus = "";
+    private String json = "";
             
     private ZonedDateTime lastRandomStreamCall;
     private ArrayList<Integer> randomStreamNumbers;
@@ -53,7 +55,7 @@ public class TwitchHandler
         streamStatus.put("reckful", false);
     }
     
-    public void followAge(String target, String user, Bot bot, sx.blah.discord.handle.obj.Channel channel)
+    public void followAge(String target, String user, TextChannel channel)
     {
         twitch.users().getFollow(user, target, new UserFollowResponseHandler()
         {
@@ -62,7 +64,7 @@ public class TwitchHandler
             {
                 if (uf == null)
                 {
-                   bot.sendMessage(user + " is not following channel " + target + ".", channel);
+                   channel.sendMessage(user + " is not following channel " + target + ".");
                 }
                 else
                 {
@@ -89,14 +91,14 @@ public class TwitchHandler
                                     Integer.toString(month) + "." + Integer.toString(year) +
                                     " (" + Integer.toString(years) + " years, " + Long.toString(days) + 
                                     " days and " + Long.toString(hours) + " hours)";
-                    bot.sendMessage(info, channel);
+                    channel.sendMessage(info);
                 }
             }
 
             @Override
             public void onFailure(int i, String string, String string1)
             {
-                bot.sendMessage(user + " is not following channel " + target + ".", channel);
+                channel.sendMessage(user + " is not following channel " + target + ".");
             }
 
             @Override
@@ -109,7 +111,7 @@ public class TwitchHandler
     }
     
     // Tries to find user in target streams chat.
-    public String stalk(String target, String user, Bot bot)
+    public String stalk(String target, String user)
     {
         boolean found = false;
         String json = "";
@@ -117,7 +119,7 @@ public class TwitchHandler
         
         try 
         {
-            json = bot.readUrl("https://tmi.twitch.tv/group/user/" + target + "/chatters");
+            json = Bot.readUrl("https://tmi.twitch.tv/group/user/" + target + "/chatters");
         } 
         catch (Exception ex) 
         {
@@ -153,17 +155,16 @@ public class TwitchHandler
         return answer;
     }
     
-    public String randomStream(Bot bot)
+    public String randomStream()
     {
         String message = "";
-        String json = "";
         try 
         {                           
             ZonedDateTime timeNow = ZonedDateTime.now();
             if (lastRandomStreamCall == null || lastRandomStreamCall.compareTo(timeNow.minusMinutes(TIMELIMIT)) <= 0
                 || randomStreamNumbers.size() >= STREAMLIMIT)
             {
-                json = bot.readUrl("https://api.twitch.tv/kraken/beta/streams/random");
+                json = Bot.readUrl("https://api.twitch.tv/kraken/beta/streams/random");
                 lastRandomStreamCall = ZonedDateTime.now();
                 if (randomStreamNumbers.size() >= STREAMLIMIT)
                 {
@@ -219,7 +220,7 @@ public class TwitchHandler
         return message;
     }
     
-    public void userInfo(String username, Bot bot, sx.blah.discord.handle.obj.Channel channel)
+    public void userInfo(String username, TextChannel channel)
     {
         twitch.channels().get(username, new ChannelResponseHandler()
         {
@@ -251,13 +252,13 @@ public class TwitchHandler
                                             " days and " + Long.toString(hours) + " hours ago)" +
                                             " Followers: " + Integer.toString(chnl.getFollowers()) + "" +
                                             " Views: " + Long.toString(chnl.getViews());
-                bot.sendMessage(info, channel);
+                channel.sendMessage(info);
      }
 
             @Override
             public void onFailure(int i, String string, String string1)
             {
-                bot.sendMessage(username + " does not exist.", channel);
+                channel.sendMessage(username + " does not exist.");
             }
             @Override
             public void onFailure(Throwable thrwbl)
@@ -267,7 +268,7 @@ public class TwitchHandler
         });
     }
      
-    public void checkStreamOnlineStatus(Entry<String, Boolean> streamInfo, sx.blah.discord.handle.obj.Channel channel, Bot bot)
+    public void checkStreamOnlineStatus(Entry<String, Boolean> streamInfo, TextChannel channel)
     {
         twitch.streams().get(streamInfo.getKey(), new StreamResponseHandler()
         {
@@ -287,7 +288,7 @@ public class TwitchHandler
                         String message = streamInfo.getKey() + " has come online PogChamp";
                         onlineStatus = "@everyone " + message;
                         onlineStatus += " http://twitch.tv/" + streamInfo.getKey() + " || Game: " + stream.getGame() + " || Title: " + stream.getChannel().getStatus();
-                        bot.sendMessage(onlineStatus, channel);
+                        channel.sendMessage(onlineStatus);
                     }
                 }
                 else
@@ -310,7 +311,7 @@ public class TwitchHandler
         });
     }
     
-    public void checkOnlineStatus(sx.blah.discord.handle.obj.Channel channel, Bot bot)
+    public void checkOnlineStatus(TextChannel channel)
     {
         
         if (channel != null)
@@ -323,7 +324,7 @@ public class TwitchHandler
                 { 
                     for (Entry<String, Boolean> e : streamStatus.entrySet())
                     {
-                        checkStreamOnlineStatus(e, channel, bot);
+                        checkStreamOnlineStatus(e, channel);
                     }
                 }
             }, 0, 5 * 60 * 1000);

@@ -8,14 +8,11 @@ package com.discord.bot;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import sx.blah.discord.util.MessageBuilder;
 
 /**
  *
@@ -36,7 +33,7 @@ public class ImgurHandler
         randomImgurNumbers = new ArrayList<>();
     }
     
-    public String randomImgur(Bot bot)
+    public String randomImgur()
     {
         String json = "";
         String message = "";
@@ -51,14 +48,14 @@ public class ImgurHandler
                 || randomImgurNumbers.size() >= IMGURLIMIT)
             {
                 String url = "https://api.imgur.com/3/gallery/random/random/" + Integer.toString(randomPage);
-                json = bot.readAuthUrl(url);
+                json = Bot.readAuthUrl(url);
                 // There are 5 random imgur sites. For some reason, some of them are sometimes empty.
                 // Lets get the first one thats not empty.
                 for (int i = 0; json.isEmpty() || i == 5; i++)
                 {
                     randomPage = 1 + r.nextInt(4);
                     url = "https://api.imgur.com/3/gallery/random/random/" + Integer.toString(randomPage);
-                    json = bot.readAuthUrl(url);
+                    json = Bot.readAuthUrl(url);
                 }
                 lastImgurCall = ZonedDateTime.now();
                 if (randomImgurNumbers.size() >= IMGURLIMIT)
@@ -96,14 +93,14 @@ public class ImgurHandler
         return message;
     } 
     
-    public String randomSubredditImgur(String subreddit, Bot bot)
+    public String randomSubredditImgur(String subreddit)
     {
         String json = "";
         String message = "";
         try 
         {
             String url = "https://api.imgur.com/3/gallery/r/" + subreddit;
-            json = bot.readAuthUrl(url);
+            json = Bot.readAuthUrl(url);
 
             if (!json.isEmpty())
             {
@@ -150,6 +147,5 @@ public class ImgurHandler
             Logger.getLogger(ImgurHandler.class.getName()).log(Level.SEVERE, null, ex);
         }
         return message;
-    }
-    
+    }  
 }

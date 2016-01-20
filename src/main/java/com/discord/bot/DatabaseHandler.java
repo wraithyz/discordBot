@@ -17,7 +17,8 @@ import java.util.Date;
 import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import sx.blah.discord.handle.obj.Message;
+import net.dv8tion.jda.entities.Message;
+import net.dv8tion.jda.entities.TextChannel;
 
 public class DatabaseHandler
 {
@@ -70,7 +71,7 @@ public class DatabaseHandler
         }
     }
 
-    public void updateDatabase(Message m)
+    public void updateDatabase(Message m, TextChannel c)
     {
         try 
         {
@@ -78,7 +79,7 @@ public class DatabaseHandler
             // Check if user is in database already.
             String query = "SELECT id " +
                          "FROM Users " +
-                         "WHERE id = '" + m.getAuthor().getID() + "'" + 
+                         "WHERE id = '" + m.getAuthor().getId() + "'" + 
                          ";";
 
             ResultSet rs = stmt.executeQuery(query);
@@ -86,7 +87,7 @@ public class DatabaseHandler
             if (!rs.next())
             {
                 query = "INSERT INTO Users (id, name) " +
-                                  "VALUES ('" + m.getAuthor().getID() + "', '" + m.getAuthor().getName() + "')" +
+                                  "VALUES ('" + m.getAuthor().getId() + "', '" + m.getAuthor().getUsername() + "')" +
                                   ";";
                 stmt.executeUpdate(query);
             }
@@ -94,7 +95,7 @@ public class DatabaseHandler
             // Check if channel is in database already.
             query = "SELECT id " +
                     "FROM Channels " +
-                    "WHERE id = '" + m.getChannel().getID() + "'" + 
+                    "WHERE id = '" + c.getId() + "'" + 
                     ";";
 
             rs = stmt.executeQuery(query);
@@ -102,7 +103,7 @@ public class DatabaseHandler
             if (!rs.next())
             {
                 query = "INSERT INTO Channels (id, name) " +
-                        "VALUES ('" + m.getChannel().getID() + "','" + m.getChannel().getName() + "')" +
+                        "VALUES ('" + c.getId() + "','" + c.getName() + "')" +
                         ";";
                 stmt.executeUpdate(query);
             }
@@ -123,9 +124,9 @@ public class DatabaseHandler
                 */
                 preparedStmt = connection.prepareStatement(query);
                 preparedStmt.setString(1, m.getContent());
-                preparedStmt.setString(2, m.getAuthor().getID());      
-                preparedStmt.setString(3, m.getChannel().getID());
-                preparedStmt.setString(4, m.getAuthor().getName());
+                preparedStmt.setString(2, m.getAuthor().getId());      
+                preparedStmt.setString(3, c.getId());
+                preparedStmt.setString(4, m.getAuthor().getUsername());
                 preparedStmt.setObject(5, param); 
                 preparedStmt.executeUpdate();  
             }

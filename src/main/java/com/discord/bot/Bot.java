@@ -1,10 +1,8 @@
 package com.discord.bot;
 
-import java.awt.Image;
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -13,21 +11,20 @@ import java.net.URL;
 import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import sx.blah.discord.handle.IListener;
-import sx.blah.discord.handle.impl.events.MessageReceivedEvent;
-import sx.blah.discord.handle.obj.Message;
-import sx.blah.discord.util.MessageBuilder;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.nio.charset.StandardCharsets;
-import javax.imageio.ImageIO;
-import sx.blah.discord.api.ClientBuilder;
-import sx.blah.discord.api.IDiscordClient;
-import sx.blah.discord.util.HTTP403Exception;
+import javax.security.auth.login.LoginException;
+import net.dv8tion.jda.JDA;
+import net.dv8tion.jda.JDABuilder;
+import net.dv8tion.jda.entities.Message;
+import net.dv8tion.jda.entities.TextChannel;
+import net.dv8tion.jda.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.hooks.ListenerAdapter;
 
-public class Bot
+public class Bot extends ListenerAdapter
 {
-    IDiscordClient client;
+    private JDA jda;
     
     private TwitchHandler twitchHandler;
     private ImgurHandler imgurHandler;
@@ -35,6 +32,7 @@ public class Bot
     private BingHandler bingHandler;
     private ChatterBotHandler chatterBotHandler;
     private EmoteHandler emoteHandler;
+    private CatHandler catHandler;
     
     private boolean loop = false;
 
@@ -44,59 +42,55 @@ public class Bot
     private final String FOLLOWAGE = "!followage";
     private final String TWITCHINFO = "!twitchinfo";
     private final String COMMAND = "!commands";
-    private final String RANDOM = "!random";
+    
+    private final String RANDOMSTREAM = "!randomstream";
+    private final String STREAM = "!stream";
+    
     private final String BALL = "!8ball";
     private final String CHAT = "!mörkö";
     private final String LOOP = "!loop";
     private final String STALK = "!stalk";
     private final String IMGUR = "!imgur";
+    
     private final String RANDOMQUOTE = "!randomquote";
+    private final String QUOTE = "!quote";
+    
     private final String STATS = "!stats";
     private final String BING = "!bing";
     private final String CHANNELINFO = "!channelinfo";
     private final String USERINFO = "!userinfo";
+    
     private final String RANDOMEMOTE = "!randomemote";
+    private final String EMOTE = "!emote";
+    
     private final String QUIT = "!quit";
+    private final String CAT = "!cat";
     
     private boolean loggedIn = false;
     
-    private final String[] COMMANDS = { REPEAT, TEST, FOLLOWAGE, TWITCHINFO, COMMAND, RANDOM, BALL, CHAT, 
-                                        LOOP, STALK, IMGUR, RANDOMQUOTE, STATS, BING, CHANNELINFO, 
-                                        USERINFO, RANDOMEMOTE };
+    private final String[] COMMANDS = { REPEAT, TEST, FOLLOWAGE, TWITCHINFO, COMMAND, STREAM, BALL, CHAT, 
+                                        LOOP, STALK, IMGUR, QUOTE, STATS, BING, CHANNELINFO, 
+                                        USERINFO, EMOTE, QUIT, CAT };
 
-    public Bot()
+    public Bot() 
     {
         twitchHandler = new TwitchHandler();
         imgurHandler = new ImgurHandler();
-        databaseHandler = new DatabaseHandler();
+        //databaseHandler = new DatabaseHandler();
         bingHandler = new BingHandler();
         chatterBotHandler = new ChatterBotHandler();
+        catHandler = new CatHandler();
         emoteHandler = new EmoteHandler();
-        emoteHandler.readBttvEmotes(this);
+        emoteHandler.readBttvEmotes();
         emoteHandler.readJsonEmotes(emoteHandler.readJsonFile(System.getProperty("user.dir") + "/emotes/emotes.json", StandardCharsets.UTF_8));
         emoteHandler.readCurrentEmotes();
-
-}
+    }
     
-    public void sendMessage(String message, sx.blah.discord.handle.obj.Channel channel)
+    public void sendMessage(String message, TextChannel channel)
     {
         if (!message.isEmpty() && channel != null)
         {
-            new MessageBuilder(client).withChannel(channel).withContent(message).build();
-
-        }
-    }
-    
-    public void sendFile(String path, sx.blah.discord.handle.obj.Channel channel)
-    {        
-        File file = new File(path);
-        try 
-        {
-            channel.sendFile(file);
-        } 
-        catch (HTTP403Exception | IOException ex) 
-        {
-            Logger.getLogger(Bot.class.getName()).log(Level.SEVERE, null, ex);
+            channel.sendMessage(message);
         }
     }
 
@@ -106,7 +100,7 @@ public class Bot
         return after;
     }
     
-    public String readAuthUrl(String urlString) throws Exception
+    public static String readAuthUrl(String urlString) throws Exception
     {
         BufferedReader reader = null;
         try 
@@ -138,10 +132,9 @@ public class Bot
         }
     }
         
-    public boolean readImage(String urlString, String pathTo)
+    public static String readImage(String urlString, String pathTo, String imageType)
     {
         System.out.println("Downloading new emote: " + urlString);
-        boolean success = false;
         try 
         {
             URL url = new URL(urlString);
@@ -159,12 +152,23 @@ public class Bot
             }
             if (out.size() > 0)
             {
+                String tmp = out.toString();
+                if (imageType.isEmpty())
+                {
+                    if (tmp.startsWith("GIF"))
+                    {
+                        imageType = "gif";
+                    }
+                    else
+                    {
+                        imageType = "png";
+                    } 
+                }
                 byte[] response = out.toByteArray();
-                try (FileOutputStream fos = new FileOutputStream(pathTo)) 
+                try (FileOutputStream fos = new FileOutputStream(pathTo + imageType)) 
                 {
                     fos.write(response);
                 }
-                success = true;
             }
         }
         catch (MalformedURLException ex) 
@@ -175,10 +179,10 @@ public class Bot
         {
             Logger.getLogger(Bot.class.getName()).log(Level.SEVERE, null, ex);
         }
-        return success;
+        return imageType;
     }
     
-    public String readUrl(String urlString) throws Exception
+    public static String readUrl(String urlString) throws Exception
     {
         BufferedReader reader = null;
         try 
@@ -272,266 +276,304 @@ public class Bot
         return response;
     }
     
-    public void loginAndHandleCommands(Bot bot)
+    
+    public void login(Bot bot, JDABuilder builder)
     {
         try 
         {
-			client = new ClientBuilder().withLogin(AuthVariables.EMAIL, AuthVariables.PW).login();
- 
-            client.getDispatcher().registerListener(new IListener<MessageReceivedEvent>() {
+            jda = builder.build();
+            jda.setDebug(true);
+        } 
+        catch (LoginException | IllegalArgumentException ex)
+        {
+            Logger.getLogger(Bot.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }   
 
-                @Override
-                public void handle(MessageReceivedEvent messageReceivedEvent)
+    @Override
+    public void onMessageReceived(MessageReceivedEvent event)
+    {
+        TextChannel channel = event.getTextChannel();
+        try 
+        {
+            if (!loggedIn)
+            {
+                TextChannel announceChannel = jda.getTextChannelById("95592065215246336");
+                twitchHandler.checkOnlineStatus(announceChannel);
+                loggedIn = true;
+            }
+
+            Message m = event.getMessage();
+
+            String[] sep = m.getContent().split(" ");
+            for (String s : sep)
+            {
+                boolean found = false;
+
+                if (s.length() < 2 || s.equals("..."))
                 {
-                    sx.blah.discord.handle.obj.Channel channel = messageReceivedEvent.getMessage().getChannel();
-                    if (!loggedIn)
+                    continue;
+                }
+                if (s.equals("SourPlsl"))
+                {
+                    sendMessage("( ° ͜ʖ͡°)╭∩╮", channel);
+                    continue;
+                }
+                if (s.endsWith("l"))
+                {
+                    found = emoteHandler.findEmote(s.substring(0, s.length() - 1), true, channel);
+                }
+                if (!found)
+                {
+                    emoteHandler.findEmote(s, false, channel);
+                }
+            }
+
+            if (!m.getContent().startsWith("!") && !m.getContent().isEmpty())
+            {
+                databaseHandler.updateDatabase(m, channel);
+            }
+
+            if (m.getContent().equals(RANDOMEMOTE) || m.getContent().equals(EMOTE))
+            {                        
+                emoteHandler.findEmote(emoteHandler.randomEmote(), true, channel);
+            }
+
+            if (m.getContent().equals(QUIT) && m.getAuthor().getId().equals(AuthVariables.USERID))
+            { 
+                sendMessage("Bye guys... BibleThump", channel);
+                System.exit(0);
+            }
+
+            if (m.getContent().startsWith(REPEAT))
+            {
+                if (m.getContent().length() > REPEAT.length())
+                {
+                    String repeat = m.getContent().substring(REPEAT.length() + 1);
+                    sendMessage(repeat, channel);      
+                }
+            }
+
+            if (m.getContent().equals(TEST))
+            {
+                sendMessage("dog doge", channel);
+            }
+            
+            if (m.getContent().equals(CAT))
+            {
+                catHandler.randomCat(channel);
+            }
+
+            if (m.getContent().equals(CHANNELINFO))
+            {
+                String id = event.getTextChannel().getId();
+                String name = event.getTextChannel().getName();
+                sendMessage("Name: " + name + " || id: " + id, channel);
+            }
+
+            if (m.getContent().equals(USERINFO))
+            {
+                String id = event.getAuthor().getId();
+                String name = event.getAuthor().getUsername();
+                String avatar = event.getAuthor().getAvatarUrl();
+                sendMessage("Name: " + name + " || Id: " + id + " || Avatar: " + avatar, channel);
+            }
+
+            if (m.getContent().equals(LOOP))
+            {
+                String state = "";
+
+                if (loop)
+                {
+                    loop = false;
+                    state = "OFF";
+                }
+                else
+                {
+                    loop = true;
+                    state = "ON";
+                }
+                sendMessage("LOOP: " + state, channel);
+            }
+
+            // Channel stats.
+            if (m.getContent().equals(STATS))
+            {
+                String id = event.getTextChannel().getId();
+                sendMessage(databaseHandler.channelStats(id), channel);
+            }
+            // User stats.
+            else if (m.getContent().startsWith(STATS))
+            {
+                if (m.getContent().length() > STATS.length())
+                {
+                    String username = m.getContent().substring(STATS.length() + 1);
+                    String id = event.getTextChannel().getId();
+                    sendMessage(databaseHandler.userStats(username, id), channel);    
+                }
+            }
+
+            if (m.getContent().equals(RANDOMQUOTE) || m.getContent().equals(QUOTE))
+            {
+                String id = event.getTextChannel().getId();
+                sendMessage(databaseHandler.randomChannelQuote(id), channel);
+            }
+            else if (m.getContent().startsWith(RANDOMQUOTE))
+            {
+                if (m.getContent().length() > RANDOMQUOTE.length())
+                {
+                    String username = m.getContent().substring(RANDOMQUOTE.length() + 1);
+                    String id = event.getTextChannel().getId();
+                    sendMessage(databaseHandler.randomUserQuote(username, id), channel);
+                }
+            }
+            else if (m.getContent().startsWith(QUOTE))
+            {
+                if (m.getContent().length() > QUOTE.length())
+                {
+                    try
                     {
-                        sx.blah.discord.handle.obj.Channel announceChannel = client.getChannelByID("95592065215246336");
-                        twitchHandler.checkOnlineStatus(announceChannel, bot);
-                        loggedIn = true;
-                    }
-                    					
-                    Message m = messageReceivedEvent.getMessage();
-                    
-                    String[] sep = m.getContent().split(" ");
-                    for (String s : sep)
-                    {
-                        boolean found = false;
-                        
-                        if (s.length() < 2 || s.equals("..."))
+                        String msg = m.getContent().substring(QUOTE.length() + 1);
+                        int quotes = Integer.parseInt(msg);
+                        for (int i = 0; i < quotes || i <= 20; i++)
                         {
-                            continue;
-                        }
-                        if (s.equals("SourPlsl"))
-                        {
-                            sendMessage("No fuck you leatherman", channel);
-                            continue;
-                        }
-                        if (s.endsWith("l"))
-                        {
-                            found = emoteHandler.findEmote(s.substring(0, s.length() - 1), true, bot, channel);
-                        }
-                        if (!found)
-                        {
-                            emoteHandler.findEmote(s, false, bot, channel);
+                             sendMessage(databaseHandler.randomChannelQuote(m.getChannelId()), channel);
                         }
                     }
-                    
-					if (!m.getContent().startsWith("!") && !m.getContent().isEmpty())
-					{
-	                    databaseHandler.updateDatabase(m);
-					}
-                    
-                    if (m.getContent().equals(RANDOMEMOTE))
-                    {                        
-                        emoteHandler.findEmote(emoteHandler.randomEmote(), true, bot, channel);
-                    }
-                    
-                    if (m.getContent().equals(QUIT) && m.getAuthor().getID().equals(AuthVariables.USERID))
-                    { 
-                        sendMessage("Bye guys... BibleThump", channel);
-                        System.exit(0);
-                    }
-                    
-                    if (m.getContent().startsWith(REPEAT))
+                    catch (NumberFormatException e)
                     {
-                        String repeat = m.getContent().substring("!repeat".length() + 1);
-                        sendMessage(repeat, channel);
-                    }
-                    
-					if (m.getContent().equals(TEST))
-                    {
-                        sendMessage("dog doge", channel);
-					}
-                    
-                    if (m.getContent().equals(CHANNELINFO))
-                    {
-                        String id = messageReceivedEvent.getMessage().getChannel().getID();
-                        String name = messageReceivedEvent.getMessage().getChannel().getName();
-                        sendMessage("Name: " + name + " || id: " + id, channel);
-					}
-                    
-                    if (m.getContent().equals(USERINFO))
-                    {
-                        String id = messageReceivedEvent.getMessage().getAuthor().getID();
-                        String name = messageReceivedEvent.getMessage().getAuthor().getName();
-                        String avatar = messageReceivedEvent.getMessage().getAuthor().getAvatarURL();
-                        sendMessage("Name: " + name + " || Id: " + id + " || Avatar: " + avatar, channel);
-                    }
-                    
-                    if (m.getContent().equals(LOOP))
-                    {
-                        String state = "";
-                        
-                        if (loop)
-                        {
-                            loop = false;
-                            state = "OFF";
-                        }
-                        else
-                        {
-                            loop = true;
-                            state = "ON";
-                        }
-                        sendMessage("LOOP: " + state, channel);
-					}
-                    
-                    // Channel stats.
-                    if (m.getContent().equals(STATS))
-                    {
-                        String id = messageReceivedEvent.getMessage().getChannel().getID();
-                        sendMessage(databaseHandler.channelStats(id), channel);
-                    }
-                    // User stats.
-                    else if (m.getContent().startsWith(STATS))
-                    {
-                        String username = m.getContent().substring(STATS.length() + 1);
-                        String id = messageReceivedEvent.getMessage().getChannel().getID();
-                        sendMessage(databaseHandler.userStats(username, id), channel);
-                    }
-                    
-                    if (m.getContent().equals(RANDOMQUOTE))
-                    {
-                        String id = messageReceivedEvent.getMessage().getChannel().getID();
-                        sendMessage(databaseHandler.randomChannelQuote(id), channel);
-                    }
-                    else if (m.getContent().startsWith(RANDOMQUOTE))
-                    {
-                        String username = m.getContent().substring(RANDOMQUOTE.length() + 1);
-                        String id = messageReceivedEvent.getMessage().getChannel().getID();
+                        System.out.println("Not a number.");
+                        String username = m.getContent().substring(QUOTE.length() + 1);
+                        String id = event.getTextChannel().getId();
                         sendMessage(databaseHandler.randomUserQuote(username, id), channel);
                     }
-                    
-                    if (m.getContent().startsWith(BING))
-                    {
-                        if (m.getContent().length() <= BING.length())
-                        {
-                            sendMessage("Please include a search phrase.", channel);
-                        }
-                        else
-                        {
-                            String phrase = m.getContent().substring(BING.length() + 1);
-                            sendMessage(bingHandler.bingSearch(phrase), channel);
-                        }
-                    }    
-                            
-                    if (m.getContent().startsWith(CHAT))
-                    {
-                        if (m.getContent().length() <= CHAT.length())
-                        {
-                            sendMessage("Please include a question.", channel);
-                        }
-                        else
-                        {
-                            String question = m.getContent().substring(CHAT.length() + 1);
-                            sendMessage(chatterBotHandler.findAnswer(question), channel);
-                        }
-                    }
-                    
-                    if (m.getContent().startsWith(BALL))
-                    {
-                        if (m.getContent().length() <= BALL.length())
-                        {
-                            sendMessage("Please include a question.", channel);
-                        }
-                        else
-                        {
-                            sendMessage(eigthBall(), channel);
-                        }
-					}
-                    
-                    if (m.getContent().startsWith(FOLLOWAGE))
-                    {
-                        if (m.getContent().length() <= FOLLOWAGE.length())
-                        {
-                            sendMessage("Please include <user> <target>", channel);
-                        }
-                        else
-                        {
-                            String username = m.getContent().substring(FOLLOWAGE.length() + 1);
-                            String target = username.substring(username.indexOf(" ") + 1);
-                            String user = username.substring(0, username.indexOf(" "));
-                            twitchHandler.followAge(target, user, bot, channel);
-                        }
-					}
+                }
+            }
+            
+            if (m.getContent().startsWith(BING))
+            {
+                if (m.getContent().length() > BING.length())
+                {
+                    String phrase = m.getContent().substring(BING.length() + 1);
+                    sendMessage(bingHandler.bingSearch(phrase), channel);
+                }    
+            }
+            if (m.getContent().startsWith(CHAT))
+            {
+                if (m.getContent().length() > CHAT.length())
+                {
+                    String question = m.getContent().substring(CHAT.length() + 1);
+                    sendMessage(chatterBotHandler.findAnswer(question, loop), channel);
+                }
+            }
 
-                    if (m.getContent().equals(COMMAND))
-                    {
-                        String tmp = "";
-                        for (int i = 0; i < COMMANDS.length; i++)
-                        {
-                            tmp += COMMANDS[i];
-                            if (i + 1 != COMMANDS.length)
-                            {
-                                tmp += ", ";
-                            }
-                        }
-                        sendMessage(tmp, channel);
-					}
+            if (m.getContent().startsWith(BALL))
+            {
+                if (m.getContent().length() > BALL.length())
+                {
+                    sendMessage(eigthBall(), channel);
+                }
+            }
 
-                    if (m.getContent().startsWith(STALK))
+            if (m.getContent().startsWith(FOLLOWAGE))
+            {
+                if (m.getContent().length() <= FOLLOWAGE.length())
+                {
+                    sendMessage("Please include <user> <target>", channel);
+                }
+                else
+                {
+                    String username = m.getContent().substring(FOLLOWAGE.length() + 1);
+                    String target = username.substring(username.indexOf(" ") + 1);
+                    String user = username.substring(0, username.indexOf(" "));
+                    twitchHandler.followAge(target, user, channel);
+                }
+            }
+
+            if (m.getContent().equals(COMMAND))
+            {
+                String message = "Commands: ";
+                for (int i = 0; i < COMMANDS.length; i++)
+                {
+                    message += COMMANDS[i];
+                    if (i + 1 != COMMANDS.length)
                     {
-                        if (m.getContent().length() <= STALK.length())
-                        {
-                            sendMessage("Please include <user> <target>", channel);
-                        }
-                        else
-                        {
-                            String username = m.getContent().substring(STALK.length() + 1);
-                            String target = username.substring(username.indexOf(" ") + 1);
-                            String user = username.substring(0, username.indexOf(" "));
-                            sendMessage(twitchHandler.stalk(target, user, bot), channel);
-                        }
+                        message += ", ";
                     }
-                    
-                    // Random stream.
-                    if (m.getContent().equals(RANDOM))
-                    {
-                        sendMessage(twitchHandler.randomStream(bot), channel);
-					}
-                    
-                    if (m.getContent().startsWith(TWITCHINFO))
-                    {
-                        if (m.getContent().length() <= TWITCHINFO.length())
-                        {
-                            sendMessage("Please include <user>.", channel);
-                        }
-                        else
-                        {
-                            String username = m.getContent().substring(TWITCHINFO.length() + 1);
-                            twitchHandler.userInfo(username, bot, channel);
-                        }
-					}
-                    
-                    if (m.getContent().equals(IMGUR))
-                    {
-                        sendMessage(imgurHandler.randomImgur(bot), channel);
-					}
-                    
-                    else if (m.getContent().startsWith(IMGUR))
-                    {
-                        if (m.getContent().length() <= IMGUR.length())
-                        {
-                            sendMessage("Please include <subreddit>.", channel);
-                        }
-                        else
-                        {
-                            String subreddit = m.getContent().substring(IMGUR.length() + 1);
-                            sendMessage(imgurHandler.randomSubredditImgur(subreddit, bot), channel);
-                        }
-                    }
-				}
-            });
+                }
+                sendMessage(message, channel);
+            }
+
+            if (m.getContent().startsWith(STALK))
+            {
+                if (m.getContent().length() <= STALK.length())
+                {
+                    sendMessage("Please include <user> <target>", channel);
+                }
+                else
+                {
+                    String username = m.getContent().substring(STALK.length() + 1);
+                    String target = username.substring(username.indexOf(" ") + 1);
+                    String user = username.substring(0, username.indexOf(" "));
+                    sendMessage(twitchHandler.stalk(target, user), channel);
+                }
+            }
+
+            // Random stream.
+            if (m.getContent().equals(RANDOMSTREAM) || m.getContent().equals(STREAM))
+            {
+                sendMessage(twitchHandler.randomStream(), channel);
+            }
+
+            if (m.getContent().startsWith(TWITCHINFO))
+            {
+                if (m.getContent().length() <= TWITCHINFO.length())
+                {
+                    sendMessage("Please include <user>.", channel);
+                }
+                else
+                {
+                    String username = m.getContent().substring(TWITCHINFO.length() + 1);
+                    twitchHandler.userInfo(username, channel);
+                }
+            }
+
+            if (m.getContent().equals(IMGUR))
+            {
+                sendMessage(imgurHandler.randomImgur(), channel);
+            }
+
+            else if (m.getContent().startsWith(IMGUR))
+            {
+                if (m.getContent().length() <= IMGUR.length())
+                {
+                    sendMessage("Please include <subreddit>.", channel);
+                }
+                else
+                {
+                    String subreddit = m.getContent().substring(IMGUR.length() + 1);
+                    sendMessage(imgurHandler.randomSubredditImgur(subreddit), channel);
+                }
+            }
 		}
         catch (Exception e)
         {
             Logger.getLogger(Bot.class.getName()).log(Level.SEVERE, null, e);
 		}
-    }   
-
+    }
+    
 	public static void main(String[] args)
     {
-        Bot bot = new Bot();
-        bot.loginAndHandleCommands(bot);
+        try 
+        {
+            Bot bot = new Bot();
+            JDABuilder builder = new JDABuilder(AuthVariables.EMAIL, AuthVariables.PW);
+            builder.addListener(bot);
+            bot.login(bot, builder);
+        } 
+        catch (IllegalArgumentException ex) 
+        {
+            Logger.getLogger(Bot.class.getName()).log(Level.SEVERE, null, ex);
+        }
 	}
 }

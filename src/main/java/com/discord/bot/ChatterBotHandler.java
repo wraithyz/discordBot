@@ -33,9 +33,13 @@ public class ChatterBotHandler
         }
     }
     
-    public String findAnswer(String question)
+    public String findAnswer(String question, boolean loop)
     {
         String answer = "";
+        if (loop)
+        {
+            answer += "!chat ";
+        }
         try 
         {
             answer = botSession.think(question);

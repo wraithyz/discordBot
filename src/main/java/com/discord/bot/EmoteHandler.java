@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import net.dv8tion.jda.entities.TextChannel;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -31,12 +32,18 @@ public class EmoteHandler
         jsonEmotes = new ArrayList<>();
     }
 
+    private void sendFile(String path, TextChannel channel)
+    {
+        File file = new File(path);
+        channel.sendFileAsync(file, null);
+    }
+    
     // Gets bttv emotes json from bttv api.
-    public void readBttvEmotes(Bot bot)
+    public void readBttvEmotes()
     {
         try 
         {
-            String json = bot.readUrl("https://api.betterttv.net/2/emotes");
+            String json = Bot.readUrl("https://api.betterttv.net/2/emotes");
             JsonParser jsonParser = new JsonParser();
             int size = jsonParser.parse(json).getAsJsonObject().getAsJsonArray("emotes").size();
             System.out.println("Found " + size + " bttv emotes.");
@@ -82,14 +89,28 @@ public class EmoteHandler
             }
             for (Emote e : jsonEmotes)
             {
-                if (fileEntry.getName().equals(e.getCode() + "." + e.getImagetype()))
+                if (fileEntry.getName().equals(e.getCode() + ".png"))
                 {
                     e.setDownloaded(true);
+                    e.setImagetype("png");
                     jsonFound++;
                 }
-                if (fileEntry.getName().equals(e.getCode() + "l." + e.getImagetype()))
+                else if (fileEntry.getName().equals(e.getCode() + ".gif"))
+                {
+                    e.setDownloaded(true);
+                    e.setImagetype("gif");
+                    jsonFound++;
+                }
+                if (fileEntry.getName().equals(e.getCode() + "l.png"))
                 {
                     e.setLargeDownloaded(true);
+                    e.setImagetype("png");
+                    jsonLargeFound++;
+                }
+                else if (fileEntry.getName().equals(e.getCode() + "l.gif"))
+                {
+                    e.setLargeDownloaded(true);
+                    e.setImagetype("gif");
                     jsonLargeFound++;
                 }
             }
@@ -101,7 +122,7 @@ public class EmoteHandler
     }
     
     // Finds if string is bttv emote. 
-    public boolean findEmote(String emote, boolean large, Bot bot, sx.blah.discord.handle.obj.Channel channel)
+    public boolean findEmote(String emote, boolean large, TextChannel channel)
     {
         Emote e = null;
         boolean found = false;
@@ -133,53 +154,54 @@ public class EmoteHandler
             // Large emote already downloaded.
             if (e.isLargeDownloaded() && large)
             {
-                bot.sendFile(emotepath + e.getCode() + "l." + e.getImagetype(), channel);
+                sendFile(emotepath + e.getCode() + "l." + e.getImagetype(), channel);
             }
             // Small emote is already downloaded.
             else if (e.isDownloaded() && !large)
             {
-                bot.sendFile(emotepath + e.getCode() + "." + e.getImagetype(), channel);
+                sendFile(emotepath + e.getCode() + "." + e.getImagetype(), channel);
             }
             // Downloads small or large version of emote.
             else
             {
-                boolean success = false;
+                String imageType = "";
 
                 if (large)
                 {
-                    success = bot.readImage("https://cdn.betterttv.net/emote/" + e.getId() + "/" + "3x", 
-                                            emotepath + e.getCode() + "l." + e.getImagetype());
-                    if (success)
+                    imageType = Bot.readImage("https://cdn.betterttv.net/emote/" + e.getId() + "/" + "3x", 
+                                            emotepath + e.getCode() + "l.", e.getImagetype());
+                    if (!imageType.isEmpty())
                     {
                         e.setLargeDownloaded(true);
+                        e.setImagetype(imageType);
                     }
                 }
                 else
                 {
-                    success = bot.readImage("https://cdn.betterttv.net/emote/" + e.getId() + "/" + "1x", 
-                                            emotepath + e.getCode() + "." + e.getImagetype());
-                    if (success)
+                    imageType = Bot.readImage("https://cdn.betterttv.net/emote/" + e.getId() + "/" + "1x", 
+                                            emotepath + e.getCode() + ".", e.getImagetype());
+                    if (!imageType.isEmpty())
                     {
                         e.setDownloaded(true);
+                        e.setImagetype(imageType);
                     }
                 }
-                if (!success)
+                if (imageType.isEmpty())
                 {
                     System.out.println("Emote download failed, not posting.");
                 }
-                if (large && success)
+                if (large && !imageType.isEmpty())
                 {
-                    bot.sendFile(emotepath + e.getCode() + "l." + e.getImagetype(), channel);
+                    sendFile(emotepath + e.getCode() + "l." + e.getImagetype(), channel);
                 }
-                else if (success)
+                else if (!imageType.isEmpty())
                 {
-                    bot.sendFile(emotepath + e.getCode() + "." + e.getImagetype(), channel);
+                    sendFile(emotepath + e.getCode() + "." + e.getImagetype(), channel);
                 }
             }
         }
         return found;
     }
-    
     
     public String readJsonFile(String path, Charset encoding) 
     {
@@ -205,7 +227,7 @@ public class EmoteHandler
             for (Iterator it = map.entrySet().iterator(); it.hasNext();) 
             {
                 Map.Entry<String, String> entry = (Map.Entry<String, String>) it.next();
-                jsonEmotes.add(new Emote(entry.getKey(), entry.getValue(), "png", false));
+                jsonEmotes.add(new Emote(entry.getKey(), entry.getValue(), "", false));
             }
             System.out.println("Found " + map.size() + " emotes from JSON.");
          } 
@@ -222,3 +244,4 @@ public class EmoteHandler
         return jsonEmotes.get(chosen).getCode();
     }
 }
+
