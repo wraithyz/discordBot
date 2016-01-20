@@ -435,9 +435,9 @@ public class Bot extends ListenerAdapter
                     {
                         String msg = m.getContent().substring(QUOTE.length() + 1);
                         int quotes = Integer.parseInt(msg);
-                        for (int i = 0; i < quotes || i <= 20; i++)
+                        for (int i = 0; i < quotes && i <= 10; i++)
                         {
-                             sendMessage(databaseHandler.randomChannelQuote(m.getChannelId()), channel);
+                            sendMessage(databaseHandler.randomChannelQuote(m.getChannelId()), channel);
                         }
                     }
                     catch (NumberFormatException e)
