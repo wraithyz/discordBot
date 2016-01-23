@@ -14,6 +14,13 @@ import java.util.logging.Logger;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.Period;
+import java.time.ZonedDateTime;
 import javax.security.auth.login.LoginException;
 import net.dv8tion.jda.JDA;
 import net.dv8tion.jda.JDABuilder;
@@ -33,6 +40,8 @@ public class Bot extends ListenerAdapter
     private ChatterBotHandler chatterBotHandler;
     private EmoteHandler emoteHandler;
     private CatHandler catHandler;
+    
+
     
     private boolean loop = false;
 
@@ -66,11 +75,14 @@ public class Bot extends ListenerAdapter
     private final String QUIT = "!quit";
     private final String CAT = "!cat";
     
-    private boolean loggedIn = false;
+    private final String UPTIME = "!uptime";
     
+    private boolean loggedIn = false;
+    private Instant loggedInTime = null;
+
     private final String[] COMMANDS = { REPEAT, TEST, FOLLOWAGE, TWITCHINFO, COMMAND, STREAM, BALL, CHAT, 
                                         LOOP, STALK, IMGUR, QUOTE, STATS, BING, CHANNELINFO, 
-                                        USERINFO, EMOTE, QUIT, CAT };
+                                        USERINFO, EMOTE, QUIT, CAT, UPTIME };
 
     public Bot() 
     {
@@ -301,6 +313,7 @@ public class Bot extends ListenerAdapter
                 TextChannel announceChannel = jda.getTextChannelById("95592065215246336");
                 twitchHandler.checkOnlineStatus(announceChannel);
                 loggedIn = true;
+                loggedInTime = Instant.now();
             }
 
             Message m = event.getMessage();
@@ -341,7 +354,7 @@ public class Bot extends ListenerAdapter
 
             if (m.getContent().equals(QUIT) && m.getAuthor().getId().equals(AuthVariables.USERID))
             { 
-                sendMessage("Bye guys... BibleThump", channel);
+                sendMessage("BibleThump", channel);
                 System.exit(0);
             }
 
@@ -356,7 +369,17 @@ public class Bot extends ListenerAdapter
 
             if (m.getContent().equals(TEST))
             {
-                sendMessage("dog doge", channel);
+                sendMessage("dog doge xD", channel);
+            }
+            
+            if (m.getContent().equals(UPTIME))
+            {
+                if (loggedInTime != null)
+                {
+                    Instant now = Instant.now();
+                    long uptime = Duration.between(loggedInTime, now).getSeconds();
+                    sendMessage("Uptime: " + LocalTime.MIN.plusSeconds(uptime).toString(), channel);
+                }
             }
             
             if (m.getContent().equals(CAT))

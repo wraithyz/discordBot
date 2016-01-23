@@ -42,7 +42,7 @@ public class ChatterBotHandler
         }
         try 
         {
-            answer = botSession.think(question);
+            answer += botSession.think(question);
         } 
         catch (Exception ex) 
         {
