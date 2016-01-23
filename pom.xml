@@ -25,7 +25,7 @@
 <dependency>
     <groupId>net.dv8tion</groupId>
     <artifactId>JDA</artifactId>
-    <version>1.2.0_91</version>
+    <version>1.2.1_106</version>
 </dependency>
 <dependency>
 	<groupId>com.google.code.gson</groupId>
