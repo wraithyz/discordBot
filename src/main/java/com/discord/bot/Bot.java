@@ -16,16 +16,14 @@ import java.net.MalformedURLException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.Period;
-import java.time.ZonedDateTime;
+import java.util.List;
 import javax.security.auth.login.LoginException;
 import net.dv8tion.jda.JDA;
 import net.dv8tion.jda.JDABuilder;
 import net.dv8tion.jda.entities.Message;
 import net.dv8tion.jda.entities.TextChannel;
+import net.dv8tion.jda.entities.User;
 import net.dv8tion.jda.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.hooks.ListenerAdapter;
 
@@ -409,7 +407,40 @@ public class Bot extends ListenerAdapter
                 String id = event.getAuthor().getId();
                 String name = event.getAuthor().getUsername();
                 String avatar = event.getAuthor().getAvatarUrl();
-                sendMessage("Name: " + name + " || Id: " + id + " || Avatar: " + avatar, channel);
+                if (avatar != null)
+                {
+                    sendMessage("Name: " + name + " || Id: " + id + " || Avatar: " + avatar, channel);
+                }
+                else
+                {
+                    sendMessage("Name: " + name + " || Id: " + id, channel);
+                }
+            }
+            else if (m.getContent().startsWith(USERINFO))
+            {
+                if (m.getContent().length() > USERINFO.length())
+                {
+                    List<User> users = channel.getUsers();
+                    String username = m.getContent().substring(USERINFO.length() + 1);
+                    for (User user : users)
+                    {
+                        if (user.getUsername().equalsIgnoreCase(username))
+                        {
+                            String id = user.getId();
+                            String avatar = user.getAvatarUrl();
+                            if (avatar != null)
+                            {
+                                sendMessage("Name: " + username + " || Id: " + id + " || Avatar: " + avatar, channel);
+                            }
+                            else
+                            {
+                                sendMessage("Name: " + username + " || Id: " + id, channel);
+                            }
+                            break;
+                        }
+                    }
+                }
+                
             }
 
             if (m.getContent().equals(LOOP))
