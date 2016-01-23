@@ -42,7 +42,7 @@ public class Bot extends ListenerAdapter
     private CatHandler catHandler;
     
 
-    
+    private boolean debug = false;
     private boolean loop = false;
 
     // Commands.
@@ -76,13 +76,14 @@ public class Bot extends ListenerAdapter
     private final String CAT = "!cat";
     
     private final String UPTIME = "!uptime";
+    private final String DEBUG = "!debug";
     
     private boolean loggedIn = false;
     private Instant loggedInTime = null;
 
     private final String[] COMMANDS = { REPEAT, TEST, FOLLOWAGE, TWITCHINFO, COMMAND, STREAM, BALL, CHAT, 
                                         LOOP, STALK, IMGUR, QUOTE, STATS, BING, CHANNELINFO, 
-                                        USERINFO, EMOTE, QUIT, CAT, UPTIME };
+                                        USERINFO, EMOTE, QUIT, CAT, UPTIME, DEBUG };
 
     public Bot() 
     {
@@ -294,7 +295,7 @@ public class Bot extends ListenerAdapter
         try 
         {
             jda = builder.build();
-            jda.setDebug(true);
+            jda.setDebug(false);
         } 
         catch (LoginException | IllegalArgumentException ex)
         {
@@ -374,6 +375,13 @@ public class Bot extends ListenerAdapter
                 sendMessage("dog doge xD", channel);
             }
             
+            if (m.getContent().equals(DEBUG))
+            {
+                debug = !debug;
+                jda.setDebug(debug);
+                sendMessage("Debug: " + Boolean.toString(debug), channel);
+            }
+            
             if (m.getContent().equals(UPTIME))
             {
                 if (loggedInTime != null)
@@ -406,19 +414,8 @@ public class Bot extends ListenerAdapter
 
             if (m.getContent().equals(LOOP))
             {
-                String state = "";
-
-                if (loop)
-                {
-                    loop = false;
-                    state = "OFF";
-                }
-                else
-                {
-                    loop = true;
-                    state = "ON";
-                }
-                sendMessage("LOOP: " + state, channel);
+                loop = !loop;
+                sendMessage("LOOP: " + Boolean.toString(loop), channel);
             }
 
             // Channel stats.
