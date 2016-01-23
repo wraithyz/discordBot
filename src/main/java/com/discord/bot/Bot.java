@@ -353,8 +353,10 @@ public class Bot extends ListenerAdapter
             }
 
             if (m.getContent().equals(QUIT) && m.getAuthor().getId().equals(AuthVariables.USERID))
-            { 
-                sendMessage("BibleThump", channel);
+            {
+                Instant now = Instant.now();
+                long uptime = Duration.between(loggedInTime, now).getSeconds();
+                sendMessage("Quitting. Uptime was: " + LocalTime.MIN.plusSeconds(uptime).toString(), channel);
                 System.exit(0);
             }
 
