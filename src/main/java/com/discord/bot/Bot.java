@@ -353,7 +353,7 @@ public class Bot extends ListenerAdapter
                 emoteHandler.findEmote(emoteHandler.randomEmote(), true, channel);
             }
 
-            if (m.getContent().equals(QUIT) && m.getAuthor().getId().equals(AuthVariables.USERID))
+            if (m.getContent().equals(QUIT) && !(m.getAuthor().getId().equals(AuthVariables.USERID)))
             {
                 Instant now = Instant.now();
                 long uptime = Duration.between(loggedInTime, now).getSeconds();
