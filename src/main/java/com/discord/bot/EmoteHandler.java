@@ -3,8 +3,11 @@ package com.discord.bot;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -223,7 +226,7 @@ public class EmoteHandler
         {
             JSONParser parser = new JSONParser();            
             JSONObject jSONObject = (JSONObject) parser.parse(emotes);
-            Map map = (Map)jSONObject;
+            Map<String, String> map = (Map)jSONObject;
             for (Iterator it = map.entrySet().iterator(); it.hasNext();) 
             {
                 Map.Entry<String, String> entry = (Map.Entry<String, String>) it.next();
@@ -242,6 +245,102 @@ public class EmoteHandler
         Random r = new Random();
         int chosen = r.nextInt(jsonEmotes.size());
         return jsonEmotes.get(chosen).getCode();
+    }
+
+    public boolean addEmote(String emote, String id)
+    {
+        try 
+        {
+            boolean validUrl = Bot.checkValidUrl("https://cdn.betterttv.net/emote/" + id + "/1x");
+            if (validUrl)
+            {
+                boolean exists = false;
+                for (Emote e : jsonEmotes)
+                {
+                    if (e.getId().equals(id) || e.getCode().equals(emote))
+                    {
+                        exists = true;
+                        System.out.println("Emote " + emote + " already exists in JSON.");
+                        break;
+                    }
+                }
+                if (!exists)
+                {
+                    for (Emote e : emoteList)
+                    {
+                        if (e.getId().equals(id) || e.getCode().equals(emote))
+                        {
+                            exists = true;
+                            System.out.println("Emote " + emote + " already exists as global bttv emote.");
+                            break;
+                        }
+                    }    
+                }
+                
+                if (!exists)
+                {
+                    jsonEmotes.add(new Emote(emote, id, "", false));
+                    System.out.println("Adding " + emote + ": " + id);
+                    writeJsonFile();
+                    return true;
+                }
+            }
+        } 
+        catch (Exception ex) 
+        {
+            Logger.getLogger(EmoteHandler.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return false;
+    }
+    
+    public void writeJsonFile()
+    {
+        try (PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(System.getProperty("user.dir") + "/emotes/emotes.json", false)))) 
+        {
+            out.print("{");
+            for (int i = 0; i < jsonEmotes.size(); i++)
+            {
+                out.print("\"" + jsonEmotes.get(i).getCode() + "\"" + ":" + "\"" + jsonEmotes.get(i).getId() + "\"");
+                if (i + 1 != jsonEmotes.size())
+                {
+                    out.print(",");
+                }
+            }
+            out.print("}");
+        }
+        catch (IOException e) 
+        {
+            System.err.println(e);
+        } 
+    }
+    
+    public boolean removeEmote(String emote)
+    {
+        try 
+        {
+            boolean exists = false;
+            for (Emote e : jsonEmotes)
+            {
+                if (e.getCode().equals(emote))
+                {
+                    exists = true;
+                    System.out.println("Removing emote: " + emote);
+                    jsonEmotes.remove(e);
+                    break;
+                }
+            }
+
+            if (!exists)
+            {
+                writeJsonFile();
+                return true;
+            }
+        } 
+        catch (Exception ex) 
+        {
+            Logger.getLogger(EmoteHandler.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return false;
     }
 }
 

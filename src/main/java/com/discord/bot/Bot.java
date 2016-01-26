@@ -69,6 +69,9 @@ public class Bot extends ListenerAdapter
     
     private final String RANDOMEMOTE = "!randomemote";
     private final String EMOTE = "!emote";
+    private final String ADDEMOTE = "!addemote";
+    private final String REMOVEEMOTE = "!removeemote";
+
     
     private final String QUIT = "!quit";
     private final String CAT = "!cat";
@@ -90,7 +93,7 @@ public class Bot extends ListenerAdapter
     
     private final String[] COMMANDS = { REPEAT, TEST, FOLLOWAGE, TWITCHINFO, COMMAND, STREAM, BALL, 
                                         CHAT, LOOP, STALK, IMGUR, QUOTE, STATS, BING, CHANNELINFO, 
-                                        USERINFO, EMOTE, QUIT, CAT, UPTIME, DEBUG };
+                                        USERINFO, EMOTE, CAT, UPTIME, DEBUG, ADDEMOTE };
 
     public Bot() 
     {
@@ -201,7 +204,6 @@ public class Bot extends ListenerAdapter
         BufferedReader reader = null;
         try 
         {
-            
             URL url = new URL(urlString);
             reader = new BufferedReader(new InputStreamReader(url.openStream()));
             StringBuilder buffer = new StringBuilder();
@@ -222,6 +224,15 @@ public class Bot extends ListenerAdapter
         }
     }
 
+    public static boolean checkValidUrl(String urlString) throws Exception
+    {
+        URL u = new URL(urlString);
+        HttpURLConnection huc =  (HttpURLConnection) u.openConnection(); 
+        huc.setRequestMethod("GET");
+        huc.connect(); 
+        return huc.getResponseCode() != 404;
+    }
+    
     private String eigthBall()
     {
         Random r = new Random();
@@ -302,7 +313,7 @@ public class Bot extends ListenerAdapter
                 System.exit(0);
             }
 
-            if (m.getContent().startsWith(REPEAT))
+            if (m.getContent().startsWith(REPEAT) && sep.length >= 2)
             {
                 if (m.getContent().length() > REPEAT.length())
                 {
@@ -337,6 +348,38 @@ public class Bot extends ListenerAdapter
             {
                 catHandler.randomCat(channel);
             }
+            
+            if (m.getContent().startsWith(ADDEMOTE))
+            {
+                if (m.getContent().length() > ADDEMOTE.length() && sep.length == 3)
+                {
+                    String message = m.getContent().substring(ADDEMOTE.length() + 1);
+                    String id = message.substring(message.indexOf(" ") + 1);
+                    String emote = message.substring(0, message.indexOf(" "));
+                    if (!emote.isEmpty() || !id.isEmpty())
+                    {
+                        if(emoteHandler.addEmote(emote, id))
+                        {
+                            sendMessage(":ok_hand:", channel);
+                        }
+                    } 
+                }
+            }
+            
+            if (m.getContent().startsWith(REMOVEEMOTE) && m.getAuthor().getId().equals(AuthVariables.USERID) && sep.length == 2)
+            {
+                if (m.getContent().length() > REMOVEEMOTE.length())
+                {
+                    String emote = m.getContent().substring(REMOVEEMOTE.length() + 1);
+                    if (!emote.isEmpty())
+                    {
+                        if (emoteHandler.removeEmote(emote))
+                        {
+                            sendMessage(":ok_hand:", channel);
+                        }
+                    }
+                }
+            }
 
             if (m.getContent().equals(CHANNELINFO))
             {
@@ -359,7 +402,7 @@ public class Bot extends ListenerAdapter
                     sendMessage("Name: " + name + " || Id: " + id, channel);
                 }
             }
-            else if (m.getContent().startsWith(USERINFO))
+            else if (m.getContent().startsWith(USERINFO) && sep.length == 2)
             {
                 if (m.getContent().length() > USERINFO.length())
                 {
@@ -399,7 +442,7 @@ public class Bot extends ListenerAdapter
                 sendMessage(databaseHandler.channelStats(id), channel);
             }
             // User stats.
-            else if (m.getContent().startsWith(STATS))
+            else if (m.getContent().startsWith(STATS) && sep.length == 2)
             {
                 if (m.getContent().length() > STATS.length())
                 {
@@ -414,7 +457,7 @@ public class Bot extends ListenerAdapter
                 String id = event.getTextChannel().getId();
                 databaseHandler.randomChannelQuote(id, 1, channel);
             }
-            else if (m.getContent().startsWith(RANDOMQUOTE))
+            else if (m.getContent().startsWith(RANDOMQUOTE) && sep.length == 2)
             {
                 if (m.getContent().length() > RANDOMQUOTE.length())
                 {
@@ -423,7 +466,7 @@ public class Bot extends ListenerAdapter
                     sendMessage(databaseHandler.randomUserQuote(username, id), channel);
                 }
             }
-            else if (m.getContent().startsWith(QUOTE))
+            else if (m.getContent().startsWith(QUOTE) && sep.length == 2)
             {
                 if (m.getContent().length() > QUOTE.length())
                 {
@@ -442,7 +485,7 @@ public class Bot extends ListenerAdapter
                 }
             }
             
-            if (m.getContent().startsWith(BING))
+            if (m.getContent().startsWith(BING) && sep.length >= 2)
             {
                 if (m.getContent().length() > BING.length())
                 {
@@ -450,7 +493,7 @@ public class Bot extends ListenerAdapter
                     sendMessage(bingHandler.bingSearch(phrase), channel);
                 }    
             }
-            if (m.getContent().startsWith(CHAT))
+            if (m.getContent().startsWith(CHAT) && sep.length >= 2)
             {
                 if (m.getContent().length() > CHAT.length())
                 {
@@ -459,7 +502,7 @@ public class Bot extends ListenerAdapter
                 }
             }
 
-            if (m.getContent().startsWith(BALL))
+            if (m.getContent().startsWith(BALL) && sep.length >= 2)
             {
                 if (m.getContent().length() > BALL.length())
                 {
@@ -467,7 +510,7 @@ public class Bot extends ListenerAdapter
                 }
             }
 
-            if (m.getContent().startsWith(FOLLOWAGE))
+            if (m.getContent().startsWith(FOLLOWAGE) && sep.length == 3)
             {
                 if (m.getContent().length() <= FOLLOWAGE.length())
                 {
@@ -496,7 +539,7 @@ public class Bot extends ListenerAdapter
                 sendMessage(message, channel);
             }
 
-            if (m.getContent().startsWith(STALK))
+            if (m.getContent().startsWith(STALK) && sep.length == 3)
             {
                 if (m.getContent().length() <= STALK.length())
                 {
@@ -517,7 +560,7 @@ public class Bot extends ListenerAdapter
                 sendMessage(twitchHandler.randomStream(), channel);
             }
 
-            if (m.getContent().startsWith(TWITCHINFO))
+            if (m.getContent().startsWith(TWITCHINFO) && sep.length == 2)
             {
                 if (m.getContent().length() <= TWITCHINFO.length())
                 {
@@ -535,7 +578,7 @@ public class Bot extends ListenerAdapter
                 sendMessage(imgurHandler.randomImgur(), channel);
             }
 
-            else if (m.getContent().startsWith(IMGUR))
+            else if (m.getContent().startsWith(IMGUR) && sep.length == 2)
             {
                 if (m.getContent().length() <= IMGUR.length())
                 {
