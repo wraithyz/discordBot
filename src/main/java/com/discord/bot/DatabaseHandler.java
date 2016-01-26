@@ -217,9 +217,12 @@ public class DatabaseHandler
         return message;
     }
     
-    public String randomChannelQuote(String id)
+    public void randomChannelQuote(String id, int amount, TextChannel channel)
     {
-        String channelMessage = "";
+        if (amount > 10)
+        {
+            amount = 10;
+        }
         try 
         {
             String query = "SELECT message, time, username " +
@@ -233,22 +236,26 @@ public class DatabaseHandler
             if (size > 0)
             {
                 Random r = new Random();
-                int choice = 1 + r.nextInt(size);
-                if (rs.absolute(choice))
+                for (int i = 0; i < amount; i++)
                 {
-                    String message = rs.getString("message");
-                    Timestamp timestamp = rs.getTimestamp("time");
-                    String username = rs.getString("username");
-                    java.util.Date date = timestamp;
-                    channelMessage = username + ": \"" + message + "\" (" + date + ")";
+                    int choice = 1 + r.nextInt(size);
+                    if (rs.absolute(choice))
+                    {
+                        String message = rs.getString("message");
+                        Timestamp timestamp = rs.getTimestamp("time");
+                        String username = rs.getString("username");
+                        java.util.Date date = timestamp;
+                        String channelMessage = username + ": \"" + message + "\" (" + date + ")";
+                        channel.sendMessageAsync(channelMessage, null);
+                    }
                 }
+                
             }
         } 
         catch (SQLException ex) 
         {
             Logger.getLogger(DatabaseHandler.class.getName()).log(Level.SEVERE, null, ex);
         }
-        return channelMessage;
     }
     
     public String randomUserQuote(String username, String id)

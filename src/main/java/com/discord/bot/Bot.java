@@ -31,13 +31,13 @@ public class Bot extends ListenerAdapter
 {
     private JDA jda;
     
-    private TwitchHandler twitchHandler;
-    private ImgurHandler imgurHandler;
-    private DatabaseHandler databaseHandler;
-    private BingHandler bingHandler;
-    private ChatterBotHandler chatterBotHandler;
-    private EmoteHandler emoteHandler;
-    private CatHandler catHandler;
+    private final TwitchHandler twitchHandler;
+    private final ImgurHandler imgurHandler;
+    private final DatabaseHandler databaseHandler;
+    private final BingHandler bingHandler;
+    private final ChatterBotHandler chatterBotHandler;
+    private final EmoteHandler emoteHandler;
+    private final CatHandler catHandler;
     
 
     private boolean debug = false;
@@ -88,8 +88,8 @@ public class Bot extends ListenerAdapter
         "The answer to that isnt pretty", "The heavens point to yes",
         "Yesterday it would have been a yes, but today its a yep", "You will have to wait" };
     
-    private final String[] COMMANDS = { REPEAT, TEST, FOLLOWAGE, TWITCHINFO, COMMAND, STREAM, BALL, CHAT, 
-                                        LOOP, STALK, IMGUR, QUOTE, STATS, BING, CHANNELINFO, 
+    private final String[] COMMANDS = { REPEAT, TEST, FOLLOWAGE, TWITCHINFO, COMMAND, STREAM, BALL, 
+                                        CHAT, LOOP, STALK, IMGUR, QUOTE, STATS, BING, CHANNELINFO, 
                                         USERINFO, EMOTE, QUIT, CAT, UPTIME, DEBUG };
 
     public Bot() 
@@ -112,12 +112,6 @@ public class Bot extends ListenerAdapter
         {
             channel.sendMessage(message);
         }
-    }
-
-    public String cleanQuotationmarks(String str)
-    {
-        String after = str.replaceAll("\"", "\\\\\"");
-        return after;
     }
     
     public static String readAuthUrl(String urlString) throws Exception
@@ -288,7 +282,9 @@ public class Bot extends ListenerAdapter
                 }
             }
 
-            if (!m.getContent().startsWith("!") && !m.getContent().isEmpty())
+            if (!m.getContent().startsWith("!") && !m.getContent().isEmpty() && 
+                !m.getAuthor().getId().equals("109370493286502400") &&
+                !m.getAuthor().getId().equals("107793044622815232"))
             {
                 databaseHandler.updateDatabase(m, channel);
             }
@@ -416,7 +412,7 @@ public class Bot extends ListenerAdapter
             if (m.getContent().equals(RANDOMQUOTE) || m.getContent().equals(QUOTE))
             {
                 String id = event.getTextChannel().getId();
-                sendMessage(databaseHandler.randomChannelQuote(id), channel);
+                databaseHandler.randomChannelQuote(id, 1, channel);
             }
             else if (m.getContent().startsWith(RANDOMQUOTE))
             {
@@ -435,14 +431,10 @@ public class Bot extends ListenerAdapter
                     {
                         String msg = m.getContent().substring(QUOTE.length() + 1);
                         int quotes = Integer.parseInt(msg);
-                        for (int i = 0; i < quotes && i <= 10; i++)
-                        {
-                            sendMessage(databaseHandler.randomChannelQuote(m.getChannelId()), channel);
-                        }
+                        databaseHandler.randomChannelQuote(m.getChannelId(), quotes, channel);
                     }
                     catch (NumberFormatException e)
                     {
-                        System.out.println("Not a number.");
                         String username = m.getContent().substring(QUOTE.length() + 1);
                         String id = event.getTextChannel().getId();
                         sendMessage(databaseHandler.randomUserQuote(username, id), channel);
