@@ -79,6 +79,15 @@ public class Bot extends ListenerAdapter
     private boolean loggedIn = false;
     private Instant loggedInTime = null;
 
+    private final String[] eightBallAnswers = { "69% for sure", "Are you kidding?!", "Ask again",
+        "Better not tell you now", "Definitely... not", "Dont bet on it", "Doubtful", "For sure",
+        "Forget about it", "Hah!", "Hells no.", "In due time", "Indubitably!", "It is certain",
+        "It is so", "Leaning towards no", "Look deep in your heart and you will see the answer",
+        "Most definitely", "Most likely", "My sources say yes", "Thats a tough one",
+        "That's like totally a yes. Duh!", "The answer might not be not no",
+        "The answer to that isnt pretty", "The heavens point to yes",
+        "Yesterday it would have been a yes, but today its a yep", "You will have to wait" };
+    
     private final String[] COMMANDS = { REPEAT, TEST, FOLLOWAGE, TWITCHINFO, COMMAND, STREAM, BALL, CHAT, 
                                         LOOP, STALK, IMGUR, QUOTE, STATS, BING, CHANNELINFO, 
                                         USERINFO, EMOTE, QUIT, CAT, UPTIME, DEBUG };
@@ -143,7 +152,7 @@ public class Bot extends ListenerAdapter
         }
     }
         
-    public static String readImage(String urlString, String pathTo, String imageType)
+    public static String downloadEmote(String urlString, String pathTo, String imageType)
     {
         System.out.println("Downloading new emote: " + urlString);
         try 
@@ -222,69 +231,7 @@ public class Bot extends ListenerAdapter
     private String eigthBall()
     {
         Random r = new Random();
-    
-        int choice = 1 + r.nextInt(28);
-        String response = "";
-
-        if ( choice == 1 )
-            response = "69% for sure";
-        else if ( choice == 2 )
-            response = "are you kidding?!";
-        else if ( choice == 3 )
-            response = "ask again";
-        else if ( choice == 4 )
-            response = "better not tell you now";
-        else if ( choice == 5 )
-            response = "definitely... not";
-        else if ( choice == 6 )
-            response = "dont bet on it";
-        else if ( choice == 7 )
-            response = "doubtful";
-        else if ( choice == 8 )
-            response = "for sure";
-        else if ( choice == 9 )
-            response = "forget about it";
-        else if ( choice == 10 )
-            response = "hah!";
-        else if ( choice == 11 )
-            response = "hells no.";
-        else if ( choice == 12 )
-            response = "if the Twitch gods grant it";
-        else if ( choice == 13 )
-            response = "in due time";
-        else if ( choice == 14 )
-            response = "indubitably!";
-        else if ( choice == 15 )
-            response = "it is certain";
-        else if ( choice == 16 )
-            response = "it is so'";
-        else if ( choice == 17 )
-            response = "leaning towards no";
-        else if ( choice == 18 )
-            response = "look deep in your heart and you will see the answer";
-        else if ( choice == 19 )
-            response = "most definitely";
-        else if ( choice == 20 )
-            response = "most likely";
-        else if ( choice == 21 )
-            response = "my sources say yes";
-        else if ( choice == 22 )
-            response = "thats a tough one";
-        else if ( choice == 23 )
-            response = "that's like totally a yes. Duh!";
-        else if ( choice == 24 )
-            response = "the answer might not be not no";
-        else if ( choice == 25 )
-            response = "the answer to that isnt pretty";
-        else if ( choice == 26 )
-            response = "the heavens point to yes";
-        else if ( choice == 27 )
-            response = "yesterday it would have been a yes, but today its a yep";
-        else if ( choice == 28 )
-            response = "you will have to wait";                                                                        
-        else 
-            response = "8-BALL ERROR!";
-        return response;
+        return eightBallAnswers[r.nextInt(eightBallAnswers.length)];
     }
     
     

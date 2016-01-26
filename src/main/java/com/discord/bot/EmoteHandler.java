@@ -168,7 +168,7 @@ public class EmoteHandler
 
                 if (large)
                 {
-                    imageType = Bot.readImage("https://cdn.betterttv.net/emote/" + e.getId() + "/" + "3x", 
+                    imageType = Bot.downloadEmote("https://cdn.betterttv.net/emote/" + e.getId() + "/" + "3x", 
                                             emotepath + e.getCode() + "l.", e.getImagetype());
                     if (!imageType.isEmpty())
                     {
@@ -178,7 +178,7 @@ public class EmoteHandler
                 }
                 else
                 {
-                    imageType = Bot.readImage("https://cdn.betterttv.net/emote/" + e.getId() + "/" + "1x", 
+                    imageType = Bot.downloadEmote("https://cdn.betterttv.net/emote/" + e.getId() + "/" + "1x", 
                                             emotepath + e.getCode() + ".", e.getImagetype());
                     if (!imageType.isEmpty())
                     {
