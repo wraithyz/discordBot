@@ -18,6 +18,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import javax.security.auth.login.LoginException;
 import net.dv8tion.jda.JDA;
 import net.dv8tion.jda.JDABuilder;
@@ -233,6 +234,54 @@ public class Bot extends ListenerAdapter
         return huc.getResponseCode() != 404;
     }
     
+    private String formatTime(long uptime)
+    {
+        int day = (int)TimeUnit.SECONDS.toDays(uptime);        
+        long hours = TimeUnit.SECONDS.toHours(uptime) - (day * 24);
+        long minute = TimeUnit.SECONDS.toMinutes(uptime) - (TimeUnit.SECONDS.toHours(uptime)* 60);
+        long second = TimeUnit.SECONDS.toSeconds(uptime) - (TimeUnit.SECONDS.toMinutes(uptime) * 60);
+        String message = "Uptime: ";
+        if (day >= 1)
+        {
+            message += String.valueOf(day);
+            if (day == 1)
+            {
+                message += " day, ";
+            }
+            if (day > 1)
+            {
+                message += " days, ";
+            }
+        }
+        if (hours < 10)
+        {
+            message += "0" + String.valueOf(hours);
+        }
+        else
+        {
+            message += String.valueOf(hours);
+        }
+        message += ":";
+        if (minute < 10)
+        {
+            message += "0" + String.valueOf(minute);
+        }
+        else
+        {
+            message += String.valueOf(minute);
+        }
+        message += ":";
+        if (second < 10)
+        {
+            message += "0" + String.valueOf(second);
+        }
+        else
+        {
+            message += String.valueOf(second);
+        }
+        return message;
+    }
+    
     private String eigthBall()
     {
         Random r = new Random();
@@ -340,7 +389,8 @@ public class Bot extends ListenerAdapter
                 {
                     Instant now = Instant.now();
                     long uptime = Duration.between(loggedInTime, now).getSeconds();
-                    sendMessage("Uptime: " + LocalTime.MIN.plusSeconds(uptime).toString(), channel);
+                    String message = formatTime(uptime);
+                    sendMessage(message, channel);
                 }
             }
             
