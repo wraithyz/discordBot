@@ -13,6 +13,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Random;
 import java.util.logging.Level;
@@ -48,9 +49,17 @@ public class DatabaseHandler
                                         "FOREIGN KEY (userId) REFERENCES Users(id)," +
                                         "FOREIGN KEY (channelId) REFERENCES Channels(id)" +
                                         ");";
-    
+    private final String ALERTS_SQL = 
+                                        "CREATE TABLE IF NOT EXISTS Alerts" +
+                                        "(" +
+                                        "ID int NOT NULL AUTO_INCREMENT PRIMARY KEY," +
+                                        "userId varchar(255)," +
+                                        "twitchChannel varchar(255)," +
+                                        "channelId varchar(255)," +
+                                        "FOREIGN KEY (userId) REFERENCES Users(id)," +
+                                        "FOREIGN KEY (channelId) REFERENCES Channels(id)" +
+                                        ");";
 
-    
     public DatabaseHandler()
     {
         System.out.println("Connecting to database...");
@@ -64,6 +73,7 @@ public class DatabaseHandler
             stmt.executeUpdate(USERS_SQL);
             stmt.executeUpdate(CHANNELS_SQL);
             stmt.executeUpdate(MESSAGES_SQL);
+            stmt.executeUpdate(ALERTS_SQL);
         } 
         catch (SQLException e) 
         {
@@ -71,6 +81,78 @@ public class DatabaseHandler
         }
     }
 
+    public void addAlert(String userId, String channelId, String twitchChannel)
+    {
+        try 
+        {
+            String query = "INSERT INTO Alerts (userId, twitchChannel, channelId) " +
+                            "VALUES (?, ?, ?)" +
+                            ";";
+            preparedStmt = connection.prepareStatement(query);
+            preparedStmt.setString(1, userId);
+            preparedStmt.setString(2, twitchChannel);
+            preparedStmt.setString(3, channelId);
+            preparedStmt.executeUpdate();
+            System.out.println("Adding " + userId + ", " + channelId + ", " + twitchChannel);
+        } 
+        catch (SQLException ex) 
+        {
+            Logger.getLogger(DatabaseHandler.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
+    public void removeAlert(String userId, String channelId, String twitchChannel)
+    {
+        try 
+        {
+            String query = "DELETE FROM Alerts " +
+                            "WHERE userID = \"" + userId + "\" and channelId = \"" + channelId + "\" and twitchChannel = \"" + twitchChannel + "\"" +
+                            ";";
+            stmt.executeUpdate(query);
+            System.out.println("Removed " + userId + ", " + channelId + ", " + twitchChannel);
+        } 
+        catch (SQLException ex) 
+        {
+            Logger.getLogger(DatabaseHandler.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
+    public void readAlerts(ArrayList<Alert> alertList)
+    {
+        try 
+        {
+            stmt = connection.createStatement();
+            String query = "SELECT * " +
+                           "FROM Alerts " +
+                           ";";
+            
+            ResultSet rs = stmt.executeQuery(query);
+            while (rs.next())
+            {
+                System.out.println(rs.getString("userId") + ", " +  rs.getString("twitchChannel") + ", " + rs.getString("channelId"));
+                boolean found = false;
+                for (Alert a : alertList)
+                {
+                    if (a.getChannelId().equals(rs.getString("channelId")) && a.getTwitchChannel().equals(rs.getString("twitchChannel")))
+                    {
+                        a.getUserIdList().add(rs.getString("userId"));
+                        System.out.println("Someone already has a alert for that twitchchannel. Adding user to it.");
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found)
+                {
+                    alertList.add(new Alert(rs.getString("userId"), rs.getString("channelId"), rs.getString("twitchChannel")));
+                }
+            }
+        } 
+        catch (SQLException ex) 
+        {
+            Logger.getLogger(DatabaseHandler.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
     public void updateDatabase(Message m, TextChannel c)
     {
         try 

@@ -20,8 +20,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Random;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -30,11 +28,8 @@ import net.dv8tion.jda.entities.TextChannel;
 public class TwitchHandler
 {
     private Twitch twitch;
-    private String followage = "";
-    private String userInfo = "";
-    private String onlineStatus = "";
     private String json = "";
-            
+                
     private ZonedDateTime lastRandomStreamCall;
     private ArrayList<Integer> randomStreamNumbers;
     private HashMap<String, Boolean> streamStatus;
@@ -220,6 +215,21 @@ public class TwitchHandler
         return message;
     }
     
+    public boolean channelExists(String channelName)
+    {
+        String json = "";
+        try 
+        {
+            json = Bot.readUrl("https://api.twitch.tv/kraken/channels/" + channelName);
+            return !json.isEmpty();
+        } 
+        catch (Exception ex) 
+        {
+            Logger.getLogger(TwitchHandler.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return false;
+    }
+    
     public void userInfo(String username, TextChannel channel)
     {
         twitch.channels().get(username, new ChannelResponseHandler()
@@ -268,66 +278,48 @@ public class TwitchHandler
         });
     }
      
-    public void checkStreamOnlineStatus(Entry<String, Boolean> streamInfo, TextChannel channel)
+    public void checkStreamOnlineStatus(Alert a, Bot bot)
     {
-        twitch.streams().get(streamInfo.getKey(), new StreamResponseHandler()
+        twitch.streams().get(a.getTwitchChannel(), new StreamResponseHandler()
         {
             @Override
             public void onSuccess(Stream stream)
             {
-                ZonedDateTime zonedDateTime = ZonedDateTime.now();
-                int hour = zonedDateTime.getHour();
-                int minute = zonedDateTime.getMinute();
-                
                 if (stream != null)
                 {
-                    if (!streamInfo.getValue())
+                    ZonedDateTime zonedDateTime = ZonedDateTime.now();
+                    int hour = zonedDateTime.getHour();
+                    int minute = zonedDateTime.getMinute();
+                    for (Entry<String, Boolean> e : a.getAnnounceList().entrySet())
                     {
-                        streamInfo.setValue(true);
-                        System.out.println(hour + ":" + minute + " || " + streamInfo.getKey() + " online.");
-                        String message = streamInfo.getKey() + " has come online PogChamp";
-                        onlineStatus = "@everyone " + message;
-                        onlineStatus += " http://twitch.tv/" + streamInfo.getKey() + " || Game: " + stream.getGame() + " || Title: " + stream.getChannel().getStatus();
-                        channel.sendMessage(onlineStatus);
+                        if (e.getKey().equals(a.getChannelId()) && !e.getValue())
+                        {
+                            e.setValue(true);
+                            System.out.println(hour + ":" + minute + " || " + a.getTwitchChannel() + " online.");
+                            String message = "";
+                            for (String user : a.getUserIdList())
+                            {
+                                message += "<@" + user + "> ";
+                            }
+                            message += a.getTwitchChannel() + " has come online PogChamp";
+                            message += " http://twitch.tv/" + a.getTwitchChannel() + " || Game: " + stream.getGame() + " || Title: " + stream.getChannel().getStatus();
+                            bot.getJda().getTextChannelById(a.getChannelId()).sendMessage(message);
+                        }
                     }
                 }
                 else
                 {
-                    streamInfo.setValue(false);
-                    System.out.println(hour + ":" + minute + " || " + streamInfo.getKey() + " offline.");
-                }
-            }
-
-            @Override
-            public void onFailure(int i, String string, String string1)
-            {
-
-            }
-
-            @Override
-            public void onFailure(Throwable thrwbl)
-            {
-            }
-        });
-    }
-    
-    public void checkOnlineStatus(TextChannel channel)
-    {
-        
-        if (channel != null)
-        {
-            Timer uploadCheckerTimer = new Timer(true);
-            uploadCheckerTimer.scheduleAtFixedRate(new TimerTask() 
-            {
-                @Override
-                public void run() 
-                { 
-                    for (Entry<String, Boolean> e : streamStatus.entrySet())
+                    for (Entry<String, Boolean> e : a.getAnnounceList().entrySet())
                     {
-                        checkStreamOnlineStatus(e, channel);
+                        e.setValue(false);
                     }
                 }
-            }, 0, 5 * 60 * 1000);
-        }  
+            }
+            @Override
+            public void onFailure(int i, String string, String string1){}
+
+            @Override
+            public void onFailure(Throwable thrwbl){}
+        });
     }
 }

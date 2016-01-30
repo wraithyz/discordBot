@@ -26,8 +26,8 @@ import org.json.simple.parser.ParseException;
 public class EmoteHandler
 {
 
-    private ArrayList<Emote> emoteList;
-    private ArrayList<Emote> jsonEmotes;
+    private final ArrayList<Emote> emoteList;
+    private final ArrayList<Emote> jsonEmotes;
     
     public EmoteHandler()
     {
@@ -295,7 +295,7 @@ public class EmoteHandler
     
     public void writeJsonFile()
     {
-        try (PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(System.getProperty("user.dir") + "/emotes/emotes.json", false)))) 
+        try (PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(Bot.JSONLOCATION, false)))) 
         {
             out.print("{");
             for (int i = 0; i < jsonEmotes.size(); i++)
