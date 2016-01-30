@@ -259,41 +259,13 @@ public class Bot extends ListenerAdapter
         if (day >= 1)
         {
             message += String.valueOf(day);
-            if (day == 1)
-            {
-                message += " day, ";
-            }
-            if (day > 1)
-            {
-                message += " days, ";
-            }
+            message += day == 1 ? " day, " : " days, ";
         }
-        if (hours < 10)
-        {
-            message += "0" + String.valueOf(hours);
-        }
-        else
-        {
-            message += String.valueOf(hours);
-        }
+        message += hours < 10 ? "0" + String.valueOf(hours) : String.valueOf(hours);
         message += ":";
-        if (minute < 10)
-        {
-            message += "0" + String.valueOf(minute);
-        }
-        else
-        {
-            message += String.valueOf(minute);
-        }
+        message += minute < 10 ? "0" + String.valueOf(minute) : String.valueOf(minute);
         message += ":";
-        if (second < 10)
-        {
-            message += "0" + String.valueOf(second);
-        }
-        else
-        {
-            message += String.valueOf(second);
-        }
+        message += second < 10 ? "0" + String.valueOf(second) : String.valueOf(second);
         return message;
     }
     
@@ -396,9 +368,13 @@ public class Bot extends ListenerAdapter
 
             else if (m.getContent().equals(QUIT) && m.getAuthor().getId().equals(AuthVariables.USERID))
             {
-                Instant now = Instant.now();
-                long uptime = Duration.between(loggedInTime, now).getSeconds();
-                sendMessage("Quitting. Uptime was: " + LocalTime.MIN.plusSeconds(uptime).toString(), channel);
+                if (loggedInTime != null)
+                {
+                    Instant now = Instant.now();
+                    long uptime = Duration.between(loggedInTime, now).getSeconds();
+                    String message = formatTime(uptime);
+                    sendMessage("Quitting. " + message, channel);
+                }
                 System.exit(0);
             }
 
