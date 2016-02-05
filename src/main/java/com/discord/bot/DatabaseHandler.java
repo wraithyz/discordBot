@@ -129,14 +129,12 @@ public class DatabaseHandler
             ResultSet rs = stmt.executeQuery(query);
             while (rs.next())
             {
-                System.out.println(rs.getString("userId") + ", " +  rs.getString("twitchChannel") + ", " + rs.getString("channelId"));
                 boolean found = false;
                 for (Alert a : alertList)
                 {
                     if (a.getChannelId().equals(rs.getString("channelId")) && a.getTwitchChannel().equals(rs.getString("twitchChannel")))
                     {
                         a.getUserIdList().add(rs.getString("userId"));
-                        System.out.println("Someone already has a alert for that twitchchannel. Adding user to it.");
                         found = true;
                         break;
                     }
@@ -146,6 +144,29 @@ public class DatabaseHandler
                     alertList.add(new Alert(rs.getString("userId"), rs.getString("channelId"), rs.getString("twitchChannel")));
                 }
             }
+        } 
+        catch (SQLException ex) 
+        {
+            Logger.getLogger(DatabaseHandler.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
+    public void readQuotes(ArrayList<Quote> quoteList)
+    {
+        try 
+        {
+            stmt = connection.createStatement();
+            String query = "SELECT * " +
+                           "FROM Messages " +
+                           ";";
+            
+            ResultSet rs = stmt.executeQuery(query);
+            System.out.println("Reading quotes.");
+            while (rs.next())
+            {
+                quoteList.add(new Quote(rs.getString("message"), rs.getString("userId"), rs.getString("channelId"), rs.getString("username"), rs.getDate("time")));
+            }
+            System.out.println("Added " + quoteList.size() + " quotes.") ;
         } 
         catch (SQLException ex) 
         {
@@ -217,182 +238,5 @@ public class DatabaseHandler
         {
             Logger.getLogger(DatabaseHandler.class.getName()).log(Level.SEVERE, null, ex);
         }
-    }
-    
-    public String channelStats(String id)
-    {
-        String message = "";
-        try 
-        {                            
-            stmt = connection.createStatement();
-
-            // No such user in database.
-            String query = "SELECT message, time " +
-                    "FROM Messages " +
-                    "WHERE channelId = '" + id + "'" +
-                    "ORDER BY time DESC;";
-
-            ResultSet rs = stmt.executeQuery(query);
-            rs.last();
-            int size = rs.getRow();
-            Timestamp timestamp = rs.getTimestamp("time");
-            if (size > 0)
-            {
-                message = "This channel has had " + size + " messages since " + timestamp;
-            }
-            else
-            {
-                message = "No messages recorded in this channel.";
-            }
-        } 
-        catch (SQLException ex) 
-        {
-            Logger.getLogger(DatabaseHandler.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        return message;
-    }
-    
-    public String userStats(String username, String id)
-    {
-        String message = "";
-        try 
-        {                            
-            stmt = connection.createStatement();
-            String query = "SELECT id " +
-                           "FROM Users " +
-                           "WHERE name = '" + username + "' " +
-                           "LIMIT 1;";
-
-            ResultSet rs = stmt.executeQuery(query);
-            // No such user in database.
-            if (rs.next())
-            {
-                query = "SELECT message, time " +
-                        "FROM Messages " +
-                        "WHERE userId = '" + rs.getString(1) + "'" +
-                        "AND channelId = '" + id + "'" +
-                        "ORDER BY time DESC;";
-
-                rs = stmt.executeQuery(query);
-                rs.last();
-                int size = rs.getRow();
-                //System.out.println(size);
-                Timestamp timestamp = rs.getTimestamp("time");
-                if (size > 0)
-                {
-                    message = username + ": " + size + " messages since " + timestamp;
-                }
-                else
-                {
-                    message = "User " + username + " has no messages in this channel.";
-                }
-            }
-            else
-            {
-                message = "User " + username + " has no messages in this channel.";
-            }
-        } 
-        catch (SQLException ex) 
-        {
-            Logger.getLogger(DatabaseHandler.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        return message;
-    }
-    
-    public void randomChannelQuote(String id, int amount, TextChannel channel)
-    {
-        if (amount > 10)
-        {
-            amount = 10;
-        }
-        try 
-        {
-            String query = "SELECT message, time, username " +
-                           "FROM Messages " +
-                           "WHERE channelId = '" + id + "'" +
-                           ";";
-            ResultSet rs = stmt.executeQuery(query);
-            rs.last();
-            int size = rs.getRow();
-            
-            if (size > 0)
-            {
-                Random r = new Random();
-                for (int i = 0; i < amount; i++)
-                {
-                    int choice = 1 + r.nextInt(size);
-                    if (rs.absolute(choice))
-                    {
-                        String message = rs.getString("message");
-                        Timestamp timestamp = rs.getTimestamp("time");
-                        String username = rs.getString("username");
-                        java.util.Date date = timestamp;
-                        String channelMessage = username + ": \"" + message + "\" (" + date + ")";
-                        channel.sendMessageAsync(channelMessage, null);
-                    }
-                }
-                
-            }
-        } 
-        catch (SQLException ex) 
-        {
-            Logger.getLogger(DatabaseHandler.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }
-    
-    public String randomUserQuote(String username, String id)
-    {
-        String channelMessage = "";
-        try 
-        {
-
-            stmt = connection.createStatement();
-            String query = "SELECT id " +
-                           "FROM Users " +
-                           "WHERE name = '" + username + "' " +
-                           "LIMIT 1;";
-
-            ResultSet rs = stmt.executeQuery(query);
-            // No such user in database.
-            if (rs.next())
-            {
-                query = "SELECT message, username, time " +
-                        "FROM Messages " +
-                        "WHERE userId = '" + rs.getString(1) + "'" +
-                        "AND channelId = '" + id + "'" +
-                        ";";
-
-                rs = stmt.executeQuery(query);
-                rs.last();
-                int size = rs.getRow();
-                System.out.println(size);
-                if (size > 0)
-                {
-                    Random r = new Random();
-                    int choice = 1 + r.nextInt(size);
-                    if (rs.absolute(choice))
-                    {
-                        String message = rs.getString("message");
-                        String messageUsername = rs.getString("username");
-                        Timestamp timestamp = rs.getTimestamp("time");
-                        java.util.Date date = timestamp;
-                        channelMessage = messageUsername + ": \"" + message + "\" (" + date + ")";
-                    }   
-                }
-                else
-                {
-                    channelMessage = "User " + username + " has no messages in this channel.";
-                }
-            }
-            else
-            {
-                channelMessage = "User " + username + " has no messages in this channel.";
-            }
-        } 
-        catch (SQLException ex) 
-        {
-            Logger.getLogger(DatabaseHandler.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        return channelMessage;
     }
 }

@@ -16,13 +16,11 @@ import java.net.MalformedURLException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.LocalTime;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import javax.security.auth.login.LoginException;
 import net.dv8tion.jda.JDA;
 import net.dv8tion.jda.JDABuilder;
-import net.dv8tion.jda.MessageBuilder;
 import net.dv8tion.jda.entities.Message;
 import net.dv8tion.jda.entities.TextChannel;
 import net.dv8tion.jda.entities.User;
@@ -42,6 +40,7 @@ public class Bot extends ListenerAdapter
     private final EmoteHandler emoteHandler;
     private final CatHandler catHandler;
     private final AlertHandler alertHandler;
+    private final QuoteHandler quoteHandler;
 
     private boolean debug = false;
     private boolean loop = false;
@@ -113,6 +112,8 @@ public class Bot extends ListenerAdapter
         catHandler = new CatHandler();
         emoteHandler = new EmoteHandler();
         alertHandler = new AlertHandler(this, databaseHandler);
+        quoteHandler = new QuoteHandler(databaseHandler);
+        quoteHandler.setupQuotes();
         alertHandler.setupAlerts();
         emoteHandler.readBttvEmotes();
         emoteHandler.readJsonEmotes(emoteHandler.readJsonFile(JSONLOCATION, StandardCharsets.UTF_8));
@@ -275,7 +276,6 @@ public class Bot extends ListenerAdapter
         return eightBallAnswers[r.nextInt(eightBallAnswers.length)];
     }
     
-    
     public void login(Bot bot, JDABuilder builder)
     {
         try 
@@ -304,7 +304,7 @@ public class Bot extends ListenerAdapter
         {
             Message m = event.getMessage();
             // Ignore bots.
-            if (m.getAuthor().getId().equals("109370493286502400") || m.getAuthor().getId().equals("107793044622815232"))
+            if (m.getAuthor().getId().equals("109370493286502400") || m.getAuthor().getId().equals("107793044622815232") && !m.getContent().startsWith(CHAT))
             {
                 return;
             }
@@ -334,7 +334,7 @@ public class Bot extends ListenerAdapter
 
             if (!m.getContent().startsWith("!") && !m.getContent().isEmpty())
             {
-                databaseHandler.updateDatabase(m, channel);
+                quoteHandler.addQuote(m, channel);
             }
             
             if (m.getContent().equals(ALERTS))
@@ -368,13 +368,10 @@ public class Bot extends ListenerAdapter
 
             else if (m.getContent().equals(QUIT) && m.getAuthor().getId().equals(AuthVariables.USERID))
             {
-                if (loggedInTime != null)
-                {
-                    Instant now = Instant.now();
-                    long uptime = Duration.between(loggedInTime, now).getSeconds();
-                    String message = formatTime(uptime);
-                    sendMessage("Quitting. " + message, channel);
-                }
+                Instant now = Instant.now();
+                long uptime = Duration.between(loggedInTime, now).getSeconds();
+                String message = formatTime(uptime);
+                channel.sendMessage("Quitting. " + message);
                 System.exit(0);
             }
 
@@ -505,7 +502,7 @@ public class Bot extends ListenerAdapter
             else if (m.getContent().equals(STATS))
             {
                 String id = event.getTextChannel().getId();
-                sendMessage(databaseHandler.channelStats(id), channel);
+                quoteHandler.channelStats(id, channel);
             }
             // User stats.
             else if (m.getContent().startsWith(STATS) && sep.length == 2)
@@ -514,22 +511,22 @@ public class Bot extends ListenerAdapter
                 {
                     String username = m.getContent().substring(STATS.length() + 1);
                     String id = event.getTextChannel().getId();
-                    sendMessage(databaseHandler.userStats(username, id), channel);    
+                    quoteHandler.userStats(username, id, channel);
                 }
             }
 
             else if (m.getContent().equals(RANDOMQUOTE) || m.getContent().equals(QUOTE))
             {
-                String id = event.getTextChannel().getId();
-                databaseHandler.randomChannelQuote(id, 1, channel);
+                String channelId = event.getTextChannel().getId();
+                quoteHandler.randomChannelQuote(channelId, 1, channel);
             }
             else if (m.getContent().startsWith(RANDOMQUOTE) && sep.length == 2)
             {
                 if (m.getContent().length() > RANDOMQUOTE.length())
                 {
                     String username = m.getContent().substring(RANDOMQUOTE.length() + 1);
-                    String id = event.getTextChannel().getId();
-                    sendMessage(databaseHandler.randomUserQuote(username, id), channel);
+                    String channelId = event.getTextChannel().getId();
+                    quoteHandler.randomUserQuote(username, channelId, channel);
                 }
             }
             else if (m.getContent().startsWith(QUOTE) && sep.length == 2)
@@ -540,13 +537,12 @@ public class Bot extends ListenerAdapter
                     {
                         String msg = m.getContent().substring(QUOTE.length() + 1);
                         int quotes = Integer.parseInt(msg);
-                        databaseHandler.randomChannelQuote(m.getChannelId(), quotes, channel);
+                        quoteHandler.randomChannelQuote(m.getChannelId(), quotes, channel);
                     }
                     catch (NumberFormatException e)
                     {
                         String username = m.getContent().substring(QUOTE.length() + 1);
-                        String id = event.getTextChannel().getId();
-                        sendMessage(databaseHandler.randomUserQuote(username, id), channel);
+                        quoteHandler.randomUserQuote(username, m.getChannelId(), channel);
                     }
                 }
             }
