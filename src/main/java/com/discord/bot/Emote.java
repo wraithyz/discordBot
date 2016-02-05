@@ -1,7 +1,6 @@
 
 package com.discord.bot;
 
-
 public class Emote
 {
     private String code;

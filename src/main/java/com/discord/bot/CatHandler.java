@@ -1,5 +1,4 @@
 
-
 package com.discord.bot;
 
 import com.google.gson.JsonParser;
