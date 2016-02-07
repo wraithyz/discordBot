@@ -63,6 +63,8 @@ public class Bot extends ListenerAdapter
     
     private final String RANDOMQUOTE = "!randomquote";
     private final String QUOTE = "!quote";
+    private final String PHRASE = "!phrase";
+    private final String PHRASECOUNT = "!phrasecount";
     
     private final String STATS = "!stats";
     private final String BING = "!bing";
@@ -100,7 +102,7 @@ public class Bot extends ListenerAdapter
     private final String[] COMMANDS = { REPEAT, TEST, FOLLOWAGE, TWITCHINFO, COMMAND, STREAM, BALL, 
                                         CHAT, LOOP, STALK, IMGUR, QUOTE, STATS, BING, CHANNELINFO, 
                                         USERINFO, EMOTE, CAT, UPTIME, DEBUG, ADDEMOTE, ADDALERT, 
-                                        REMOVEALERT, ALERTS};
+                                        REMOVEALERT, ALERTS, PHRASE, PHRASECOUNT };
 
     public Bot() 
     {
@@ -529,6 +531,38 @@ public class Bot extends ListenerAdapter
                     quoteHandler.randomUserQuote(username, channelId, channel);
                 }
             }
+            
+            else if (m.getContent().startsWith(PHRASECOUNT) && sep.length == 2)
+            {
+                if (m.getContent().length() > PHRASECOUNT.length())
+                {
+                    String channelId = event.getTextChannel().getId();
+                    quoteHandler.phraseCount(sep[1], "",channelId, channel);
+                }
+            }
+            
+            else if (m.getContent().startsWith(PHRASECOUNT) && sep.length == 3)
+            {
+                if (m.getContent().length() > PHRASECOUNT.length())
+                {
+                    String channelId = event.getTextChannel().getId();
+                    quoteHandler.phraseCount(sep[1], sep[2],channelId, channel);
+                }
+            }
+            
+            else if (m.getContent().startsWith(PHRASE))
+            {
+                if (m.getContent().length() > PHRASE.length())
+                {
+                    String phrase = m.getContent().substring(PHRASE.length() + 1);
+                    String channelId = event.getTextChannel().getId();
+                    if (phrase.length() > 1)
+                    {
+                        quoteHandler.randomPhrase(phrase, channelId, channel);
+                    }
+                }
+            }   
+            
             else if (m.getContent().startsWith(QUOTE) && sep.length == 2)
             {
                 if (m.getContent().length() > QUOTE.length())

@@ -10,9 +10,9 @@ import java.util.logging.Logger;
 
 public class ChatterBotHandler
 {
-    ChatterBotFactory factory;
-    ChatterBot bot;
-    ChatterBotSession botSession;
+    private ChatterBotFactory factory;
+    private ChatterBot bot;
+    private ChatterBotSession botSession;
     
     public ChatterBotHandler()
     {

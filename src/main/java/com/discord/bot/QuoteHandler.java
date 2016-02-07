@@ -133,7 +133,7 @@ public class QuoteHandler
             }
         }
         
-        if (quoteList.isEmpty())
+        if (userQuotes.isEmpty())
         {
             channel.sendMessage("No recorded messages in this channel.");
             return;
@@ -143,5 +143,52 @@ public class QuoteHandler
         channel.sendMessage(username + ": \"" + userQuotes.get(choice).getContent() + "\" (" + userQuotes.get(choice).getTime().toString() + ")");
     }  
 
-
+    public void randomPhrase(String phrase, String channelId, TextChannel channel)
+    {
+        ArrayList<Quote> phraseQuotes = new ArrayList<>();
+        
+        for (Quote q : quoteList)
+        {
+            if (q.getContent().contains(phrase) && q.getChannelId().equals(channelId))
+            {
+                phraseQuotes.add(q);
+            }
+        }
+        
+        if (phraseQuotes.isEmpty())
+        {
+            channel.sendMessage("No messages containing such phrase in this channel.");
+            return;
+        }
+        
+        Random r = new Random();
+        int choice = r.nextInt(phraseQuotes.size());
+        channel.sendMessage(phraseQuotes.get(choice).getUsername()+ ": \"" + phraseQuotes.get(choice).getContent() + "\" (" + phraseQuotes.get(choice).getTime().toString() + ")");
+    }
+    
+    public void phraseCount(String phrase, String username, String channelId, TextChannel channel)
+    {
+        int count = 0;
+        
+        for (Quote q : quoteList)
+        {
+            if (username.isEmpty())
+            {
+                if (q.getContent().contains(phrase) && q.getChannelId().equals(channelId))
+                {
+                    count++;
+                }
+            }
+            else
+            {
+                if (q.getContent().contains(phrase) && q.getChannelId().equals(channelId) && q.getUsername().equalsIgnoreCase(username))
+                {
+                    count++;
+                }
+            }
+        }   
+        
+        String message = username.isEmpty() ? String.valueOf(count) : username + ": " + String.valueOf(count);
+        channel.sendMessage(message);
+    }
 }
