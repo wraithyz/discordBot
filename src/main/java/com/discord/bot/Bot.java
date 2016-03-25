@@ -22,6 +22,7 @@ import javax.security.auth.login.LoginException;
 import net.dv8tion.jda.JDA;
 import net.dv8tion.jda.JDABuilder;
 import net.dv8tion.jda.entities.Message;
+import net.dv8tion.jda.entities.PrivateChannel;
 import net.dv8tion.jda.entities.TextChannel;
 import net.dv8tion.jda.entities.User;
 import net.dv8tion.jda.events.ReadyEvent;
@@ -282,8 +283,7 @@ public class Bot extends ListenerAdapter
     {
         try 
         {
-            jda = builder.build();
-            jda.setDebug(false);
+            jda = builder.buildAsync();
         } 
         catch (LoginException | IllegalArgumentException ex)
         {
