@@ -6,16 +6,17 @@
 
 package com.discord.bot;
 
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import net.dv8tion.jda.entities.Message;
@@ -81,6 +82,35 @@ public class DatabaseHandler
         }
     }
 
+    public void toFile()
+    {
+        try 
+        {
+            stmt = connection.createStatement();
+            String query = "SELECT * " +
+                           "FROM Messages " +
+                           ";";
+            
+            ResultSet rs = stmt.executeQuery(query);
+            System.out.println("Reading quotes.");
+            PrintWriter writer = new PrintWriter("messages.txt", "UTF-8");      
+            while (rs.next())
+            {
+                writer.print(rs.getString("message") + "\r\n");
+            }
+            System.out.println("Done");
+            writer.close();
+        } 
+        catch (SQLException ex) 
+        {
+            Logger.getLogger(DatabaseHandler.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (FileNotFoundException ex) {
+            Logger.getLogger(DatabaseHandler.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (UnsupportedEncodingException ex) {
+            Logger.getLogger(DatabaseHandler.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
     public void addAlert(String userId, String channelId, String twitchChannel)
     {
         try 
