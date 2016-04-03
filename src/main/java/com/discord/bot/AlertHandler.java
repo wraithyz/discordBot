@@ -119,8 +119,8 @@ public class AlertHandler
     
     public void checkOnlineStatus(TwitchHandler twitch)
     {
-        Timer uploadCheckerTimer = new Timer(true);
-        uploadCheckerTimer.scheduleAtFixedRate(new TimerTask() 
+        Timer onlineCheckerTimer = new Timer(true);
+        onlineCheckerTimer.scheduleAtFixedRate(new TimerTask() 
         {
             @Override
             public void run() 

@@ -166,7 +166,7 @@ public class QuoteHandler
         channel.sendMessage(phraseQuotes.get(choice).getUsername()+ ": \"" + phraseQuotes.get(choice).getContent() + "\" (" + phraseQuotes.get(choice).getTime().toString() + ")");
     }
     
-    public void phraseCount(String phrase, String username, String channelId, TextChannel channel)
+    public void phraseCount(String phrase, String username, String userId, String channelId, TextChannel channel)
     {
         int count = 0;
         
@@ -181,7 +181,7 @@ public class QuoteHandler
             }
             else
             {
-                if (q.getContent().contains(phrase) && q.getChannelId().equals(channelId) && q.getUsername().equalsIgnoreCase(username))
+                if (q.getContent().contains(phrase) && q.getChannelId().equals(channelId) && q.getUserId().equalsIgnoreCase(userId))
                 {
                     count++;
                 }

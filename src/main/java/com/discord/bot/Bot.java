@@ -22,7 +22,6 @@ import javax.security.auth.login.LoginException;
 import net.dv8tion.jda.JDA;
 import net.dv8tion.jda.JDABuilder;
 import net.dv8tion.jda.entities.Message;
-import net.dv8tion.jda.entities.PrivateChannel;
 import net.dv8tion.jda.entities.TextChannel;
 import net.dv8tion.jda.entities.User;
 import net.dv8tion.jda.events.ReadyEvent;
@@ -85,7 +84,6 @@ public class Bot extends ListenerAdapter
     private final String CAT = "!cat";
     
     private final String UPTIME = "!uptime";
-    private final String DEBUG = "!debug";
     
     private Instant loggedInTime = null;
     
@@ -102,7 +100,7 @@ public class Bot extends ListenerAdapter
     
     private final String[] COMMANDS = { REPEAT, TEST, FOLLOWAGE, TWITCHINFO, COMMAND, STREAM, BALL, 
                                         CHAT, LOOP, STALK, IMGUR, QUOTE, STATS, BING, CHANNELINFO, 
-                                        USERINFO, EMOTE, CAT, UPTIME, DEBUG, ADDEMOTE, ADDALERT, 
+                                        USERINFO, EMOTE, CAT, UPTIME, ADDEMOTE, ADDALERT, 
                                         REMOVEALERT, ALERTS, PHRASE, PHRASECOUNT };
 
     public Bot() 
@@ -130,6 +128,20 @@ public class Bot extends ListenerAdapter
             channel.sendMessageAsync(message, null);
         }
     }
+    
+    public String getUserId(TextChannel channel, String username)
+    {
+        List<User> users = channel.getUsers();
+        for (User user : users)
+        {
+            if (user.getUsername().equalsIgnoreCase(username))
+            {
+                return user.getId(); 
+            }
+        }
+        return "";
+    }
+    
     
     public static String readAuthUrl(String urlString) throws Exception
     {
@@ -296,6 +308,7 @@ public class Bot extends ListenerAdapter
     {
         alertHandler.checkOnlineStatus(twitchHandler);
         loggedInTime = Instant.now();
+        //databaseHandler.toFile();
     }
     
     @Override
@@ -391,13 +404,6 @@ public class Bot extends ListenerAdapter
                 sendMessage("dog doge xD", channel);
             }
             
-            else if (m.getContent().equals(DEBUG))
-            {
-                debug = !debug;
-                jda.setDebug(debug);
-                sendMessage("Debug: " + Boolean.toString(debug), channel);
-            }
-            
             else if (m.getContent().equals(UPTIME))
             {
                 if (loggedInTime != null)
@@ -491,7 +497,6 @@ public class Bot extends ListenerAdapter
                         }
                     }
                 }
-                
             }
 
             else if (m.getContent().equals(LOOP))
@@ -537,7 +542,7 @@ public class Bot extends ListenerAdapter
                 if (m.getContent().length() > PHRASECOUNT.length())
                 {
                     String channelId = event.getTextChannel().getId();
-                    quoteHandler.phraseCount(sep[1], "",channelId, channel);
+                    quoteHandler.phraseCount(sep[1], "", "" ,channelId, channel);
                 }
             }
             
@@ -546,7 +551,11 @@ public class Bot extends ListenerAdapter
                 if (m.getContent().length() > PHRASECOUNT.length())
                 {
                     String channelId = event.getTextChannel().getId();
-                    quoteHandler.phraseCount(sep[1], sep[2],channelId, channel);
+                    String username = getUserId(channel, sep[2]);
+                    if (!username.isEmpty())
+                    {
+                        quoteHandler.phraseCount(sep[1], sep[2], username, channelId, channel);
+                    }
                 }
             }
             
